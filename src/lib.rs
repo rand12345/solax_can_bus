@@ -454,6 +454,18 @@ impl SolaxBms {
 }
 
 fn reg05_data() -> Result<Vec<CanFrame>> {
+    //simplify this
+
+    let zeros1 = CanFrame::new(
+        Id::Extended(ExtendedId::new(0x1881).unwrap()),
+        &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
+    )
+    .context("reg05")?;
+    let zeros2 = CanFrame::new(
+        Id::Extended(ExtendedId::new(0x1882).unwrap()),
+        &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
+    )
+    .context("reg05")?;
     Ok([
         CanFrame::new(
             Id::Extended(ExtendedId::new(0x1881).unwrap()),
@@ -465,86 +477,22 @@ fn reg05_data() -> Result<Vec<CanFrame>> {
             &[0x0, 0x50, 0x51, 0x65, 0x66, 0x48, 0x53, 0x50],
         )
         .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x5, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x6, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x6, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x7, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x7, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1881).unwrap()),
-            &[0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
-        CanFrame::new(
-            Id::Extended(ExtendedId::new(0x1882).unwrap()),
-            &[0x8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-        )
-        .context("reg05")?,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
+        zeros1,
+        zeros2,
     ]
     .to_vec())
 }
