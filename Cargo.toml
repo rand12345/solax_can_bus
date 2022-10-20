@@ -1,0 +1,12 @@
+[package]
+name = "solax_can_bus"
+description = "`#![no_std]` battery management library for interacting Solax Hybrid and AC CAN inverters."
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+embedded-hal-0-2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }
+anyhow = "1"
+log = "0.4.17"
