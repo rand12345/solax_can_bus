@@ -1,23 +1,11 @@
 use anyhow::{anyhow, Context, Result};
-use embedded_hal::can::{ExtendedId, Frame, Id};
+use embedded_hal::can::{ExtendedId, Id};
 use log::info;
 use std::time::Instant;
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 const REG02: &[u8] = &[0x2, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 const REG05: &[u8] = &[0x5, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
-
-#[derive(Debug, Clone, Copy)]
-pub struct CanFrame {
-    /// ID of CAN frame.
-    pub(crate) id: Id,
-    /// Whether the frame is an RTR frame.
-    pub(crate) rtr: bool,
-    /// Length of data in CAN frame.
-    pub(crate) dlc: u8,
-    /// Data, maximum 8 bytes.
-    pub(crate) data: [u8; 8],
-}
 
 /*
 [04, 10, b8, 0b, c8, 00, 5e, 01] [4100, 3000, 200, 350] = Pack limits - Max 410V Min 300V Charg&e 20A Discharge 35A
@@ -78,7 +66,10 @@ impl SolaxBms {
     pub fn is_valid(&mut self) -> bool {
         self.valid
     }
-    pub fn parser(&mut self, can_frame: CanFrame) -> Result<Option<Vec<CanFrame>>> {
+    pub fn parser<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
+        &mut self,
+        can_frame: T,
+    ) -> Result<Option<Vec<T>>> {
         if can_frame.id() != Id::Extended(ExtendedId::new(0x1871).unwrap()) {
             return Err(anyhow!(
                 "{:02x?} is not a valid Solax can Id",
@@ -118,7 +109,7 @@ impl SolaxBms {
         })
     }
 
-    fn reg01(&mut self) -> Result<Vec<CanFrame>> {
+    fn reg01<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
         if self.announce.is_none() {
             self.announce = Some(Instant::now());
             info!("Gateway announce sent");
@@ -144,7 +135,9 @@ impl SolaxBms {
             data[2], data[3], data[4], data[5], data[6], data[7]
         );
     }
-    fn reg05(&self) -> Result<Vec<CanFrame>> {
+    fn reg05<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
+        &self,
+    ) -> Result<Vec<T>> {
         reg05_data()
     }
     // pub fn new(&mut self) -> SolaxBms {
@@ -168,10 +161,10 @@ impl SolaxBms {
     //     self.v_max = bmsdata.max_volts;
     //     self.v_min = bmsdata.min_volts;
     // }
-    fn announce(&self) -> Result<CanFrame> {
-        CanFrame::new(Id::Extended(ExtendedId::new(0x100A001).unwrap()), &[0u8; 0]).context("1873")
+    fn announce<T: embedded_hal::can::Frame>(&self) -> Result<T> {
+        T::new(Id::Extended(ExtendedId::new(0x100A001).unwrap()), &[0u8; 0]).context("1873")
     }
-    fn handshake(&mut self) -> Result<Vec<CanFrame>> {
+    fn handshake<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
         self.id = 0x00;
         self.byte1 = 0x0d;
         self.byte2 = 0x01;
@@ -185,7 +178,7 @@ impl SolaxBms {
         } else if self.counter == 3 {
             (self.byte1, self.byte2) = (0x0d, 0x01);
         } /*else if self.counter == 4 {
-                                                  (self.byte1, self.byte2) = (0x1d, 0x10);
+                                                    (self.byte1, self.byte2) = (0x1d, 0x10);
           }*/
 
         // taking into account incrementer
@@ -199,28 +192,25 @@ impl SolaxBms {
         self.counter += 1;
         self.last_success = Some(Instant::now());
         Ok(vec![
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1877).unwrap()),
                 &self.x1877(),
             )
             .context("1877")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1872).unwrap()),
                 &x1872_payload,
             )
             .context("1872")?,
-            CanFrame::new(Id::Extended(ExtendedId::new(0x1873).unwrap()), &[0u8; 8])
-                .context("1873")?,
-            CanFrame::new(Id::Extended(ExtendedId::new(0x1874).unwrap()), &[0u8; 8])
-                .context("1874")?,
-            CanFrame::new(
+            T::new(Id::Extended(ExtendedId::new(0x1873).unwrap()), &[0u8; 8]).context("1873")?,
+            T::new(Id::Extended(ExtendedId::new(0x1874).unwrap()), &[0u8; 8]).context("1874")?,
+            T::new(
                 Id::Extended(ExtendedId::new(0x1875).unwrap()),
                 &[0, 0, 2, 0, 0, 0, 0, 0],
             )
             .context("1875")?,
-            CanFrame::new(Id::Extended(ExtendedId::new(0x1876).unwrap()), &[0u8; 8])
-                .context("1876")?,
-            CanFrame::new(
+            T::new(Id::Extended(ExtendedId::new(0x1876).unwrap()), &[0u8; 8]).context("1876")?,
+            T::new(
                 Id::Extended(ExtendedId::new(0x1878).unwrap()),
                 &x1878_payload,
             )
@@ -228,7 +218,7 @@ impl SolaxBms {
             // TXFrame::new(0x1879, [0u8; 8]),
         ])
     }
-    fn tx_data_frames(&mut self) -> Result<Vec<CanFrame>> {
+    fn tx_data_frames<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
         if !(1..=100u16).contains(&self.capacity) {
             return Err(anyhow!("Data - fault condition - soc = {}", self.capacity));
         }
@@ -252,37 +242,37 @@ impl SolaxBms {
         self.last_success = Some(Instant::now());
 
         Ok(vec![
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1877).unwrap()),
                 &self.x1877(),
             )
             .context("x1877")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1872).unwrap()),
                 &self.x1872(),
             )
             .context("x1872")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1873).unwrap()),
                 &self.x1873(),
             )
             .context("x1873")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1874).unwrap()),
                 &self.x1874(),
             )
             .context("x1874")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1875).unwrap()),
                 &self.x1875(),
             )
             .context("x1875")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1876).unwrap()),
                 &self.x1876(),
             )
             .context("x1876")?,
-            CanFrame::new(
+            T::new(
                 Id::Extended(ExtendedId::new(0x1878).unwrap()),
                 &self.x1878(),
             )
@@ -453,26 +443,27 @@ impl SolaxBms {
     */
 }
 
-fn reg05_data() -> Result<Vec<CanFrame>> {
+fn reg05_data<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
+) -> Result<Vec<T>> {
     //simplify this
 
-    let zeros1 = CanFrame::new(
+    let zeros1 = T::new(
         Id::Extended(ExtendedId::new(0x1881).unwrap()),
         &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
     )
     .context("reg05")?;
-    let zeros2 = CanFrame::new(
+    let zeros2 = T::new(
         Id::Extended(ExtendedId::new(0x1882).unwrap()),
         &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
     )
     .context("reg05")?;
     Ok([
-        CanFrame::new(
+        T::new(
             Id::Extended(ExtendedId::new(0x1881).unwrap()),
             &[0x0, 0x54, 0x83, 0x66, 0x77, 0x83, 0x70, 0x65],
         )
         .context("reg05")?,
-        CanFrame::new(
+        T::new(
             Id::Extended(ExtendedId::new(0x1882).unwrap()),
             &[0x0, 0x50, 0x51, 0x65, 0x66, 0x48, 0x53, 0x50],
         )
@@ -495,59 +486,6 @@ fn reg05_data() -> Result<Vec<CanFrame>> {
         zeros2,
     ]
     .to_vec())
-}
-
-impl Frame for CanFrame {
-    fn new(id: impl Into<Id>, data: &[u8]) -> Option<Self> {
-        if data.len() > 8 {
-            return None;
-        }
-        let mut frame = CanFrame {
-            id: id.into(),
-            rtr: false,
-            dlc: data.len() as u8, // Already asserted data.len() <= 8
-            data: [0; 8],
-        };
-        frame.data[..data.len()].copy_from_slice(data);
-        Some(frame)
-    }
-
-    fn new_remote(id: impl Into<Id>, dlc: usize) -> Option<Self> {
-        if dlc > 8 {
-            return None;
-        }
-        Some(CanFrame {
-            id: id.into(),
-            rtr: true,
-            dlc: dlc as u8, // Already asserted dlc <= 8
-            data: [0; 8],
-        })
-    }
-
-    #[inline]
-    fn is_extended(&self) -> bool {
-        matches!(self.id, Id::Extended(_))
-    }
-
-    #[inline]
-    fn is_remote_frame(&self) -> bool {
-        self.rtr
-    }
-
-    #[inline]
-    fn id(&self) -> Id {
-        self.id
-    }
-
-    #[inline]
-    fn dlc(&self) -> usize {
-        self.dlc as usize
-    }
-
-    #[inline]
-    fn data(&self) -> &[u8] {
-        &self.data[..self.dlc()]
-    }
 }
 
 fn as_u16le(bytes: &[u8]) -> [u16; 4] {
