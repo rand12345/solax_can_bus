@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use embedded_hal_0_2::can::{ExtendedId, Frame, Id};
+use embedded_hal::can::{ExtendedId, Frame, Id};
 use log::info;
 use std::time::Instant;
 
