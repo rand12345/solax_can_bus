@@ -28,30 +28,30 @@ pub enum SolaxStatus {
 #[derive(Debug, Default, Clone, Copy)]
 pub struct SolaxBms {
     // no conversions out of this struct
-    status: SolaxStatus,
-    slave_voltage_max: u16, // 1000 = 100.0v
-    slave_voltage_min: u16, // 800 = 80.0v
-    charge_max: u16,        // 201 = 20A
-    discharge_max: u16,     // 350 = 35A
-    voltage: u16,           // 1130 = 113.0V
-    current: i16,           // -2 = -0.2A
-    capacity: u16,          // %
-    kwh: u16,               // 419 = 41.9 Kwh (* 0.1)
-    cell_temp_min: i16,     // 18 = 1.8ºC signed
-    cell_temp_max: i16,     // 21 = 2.1ºC
-    cell_voltage_min: u16,  // 40 = 4.0V
-    cell_voltage_max: u16,  // 41 = 4.1V
-    pack_voltage_max: u16,  // 4100 = 410.0V
-    wh_total: u32,          // watt hours total in wh
-    contactor: bool,
-    int_temp: i16, // 20 = 20ºC
-    v_max: u16,    // 4501 = 45.01º
-    v_min: u16,    // 1501 = 15.01º
-    id: u8,
-    byte1: u8,
-    byte2: u8,
-    counter: u8,
-    valid: bool,
+    pub status: SolaxStatus,
+    pub slave_voltage_max: u16, // 1000 = 100.0v
+    pub slave_voltage_min: u16, // 800 = 80.0v
+    pub charge_max: u16,        // 201 = 20A
+    pub discharge_max: u16,     // 350 = 35A
+    pub voltage: u16,           // 1130 = 113.0V
+    pub current: i16,           // -2 = -0.2A
+    pub capacity: u16,          // %
+    pub kwh: u16,               // 419 = 41.9 Kwh (* 0.1)
+    pub cell_temp_min: i16,     // 18 = 1.8ºC signed
+    pub cell_temp_max: i16,     // 21 = 2.1ºC
+    pub cell_voltage_min: u16,  // 40 = 4.0V
+    pub cell_voltage_max: u16,  // 41 = 4.1V
+    pub pack_voltage_max: u16,  // 4100 = 410.0V
+    pub wh_total: u32,          // watt hours total in wh
+    pub contactor: bool,
+    pub int_temp: i16, // 20 = 20ºC
+    pub v_max: u16,    // 4501 = 45.01º
+    pub v_min: u16,    // 1501 = 15.01º
+    pub id: u8,
+    pub byte1: u8,
+    pub byte2: u8,
+    pub counter: u8,
+    pub valid: bool,
     pub announce: Option<Instant>,
     pub last_success: Option<Instant>,
     pub last_rx: Option<Instant>,
