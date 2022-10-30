@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use embedded_hal::can::{ExtendedId, Id};
-use log::info;
+// use log::println;
 use std::time::{Duration, Instant};
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
@@ -72,10 +72,10 @@ impl SolaxBms {
         match self.timestamp {
             Some(time) => {
                 if time.elapsed() < Duration::from_secs(60) {
-                    info!("Data is {:?} old", time.elapsed(),);
+                    println!("Data is {:?} old", time.elapsed(),);
                     true
                 } else {
-                    info!(
+                    println!(
                         "Data is too old {:?}, timeout is {:?}",
                         time.elapsed(),
                         Duration::from_secs(60)
@@ -132,7 +132,7 @@ impl SolaxBms {
     fn reg01<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
         if self.announce.is_none() {
             self.announce = Some(Instant::now());
-            info!("Gateway announce sent");
+            println!("Gateway announce sent");
             return Ok(vec![self.announce()?]);
         };
         match self.is_valid() {
@@ -150,7 +150,7 @@ impl SolaxBms {
     }
     fn reg03(&mut self, data: &[u8]) {
         self.time = data[2..=7].try_into().unwrap_or_default();
-        info!(
+        println!(
             "Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02}",
             data[2], data[3], data[4], data[5], data[6], data[7]
         );
@@ -169,7 +169,7 @@ impl SolaxBms {
         self.byte1 = 0x0d;
         self.byte2 = 0x01;
 
-        info!("SENDING TO INV -> {:#?}", self);
+        println!("SENDING TO INV -> {:#?}", self);
         if self.counter == 1 {
             (self.byte1, self.byte2) = (0xf7, 0x16);
         } else if self.counter == 2 {
@@ -296,7 +296,7 @@ impl SolaxBms {
 
     fn x1872_decode(self, bytes: &[u8]) {
         let ints = as_u16le(bytes);
-        info!(
+        println!(
             "Pack limits - Max {}V Min {}V Charge {}A Discharge {}A",
             ints[0] as f32 * 0.1,
             ints[1] as f32 * 0.1,
@@ -319,7 +319,7 @@ impl SolaxBms {
 
     fn x1873_decode(self, bytes: &[u8]) {
         let ints = as_u16le(bytes);
-        info!(
+        println!(
             "Pack Now - {}V  {}A  SoC:{}%  {}kWh",
             ints[0] as f32 * 0.1,
             (ints[1] as i16) as f32 / 10.0,
@@ -343,7 +343,7 @@ impl SolaxBms {
     fn x1874_decode(self, bytes: &[u8]) //Cell data
     {
         let ints = as_u16le(bytes);
-        info!(
+        println!(
             "Pack limts - Max {}º Min {}º Max {}V Min {}V ",
             ints[0] as f32 * 0.1,
             ints[1] as f32 * 0.1,
@@ -369,7 +369,7 @@ impl SolaxBms {
     fn x1875_decode(self, bytes: &[u8]) // BMS status
     {
         let ints = as_u16le(bytes);
-        info!(
+        println!(
             "BMS status - Int temp {}ºC Unknown {} Contactor {}",
             ints[0] as f32 * 0.1,
             bytes[3] != 1,
@@ -390,7 +390,7 @@ impl SolaxBms {
     {
         // let x1875 = vec![0x53, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00];
         let ints = as_u16le(bytes);
-        info!(
+        println!(
             "Pack status - {}? {}mV {}? {}mV",
             ints[0] as f32 * 1.0,
             ints[1] as f32 * 1.0,
