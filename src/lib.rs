@@ -150,7 +150,7 @@ impl SolaxBms {
     }
     fn reg03(&mut self, data: &[u8]) {
         self.time = data[2..=7].try_into().unwrap_or_default();
-        println!(
+        info!(
             "Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02}",
             data[2], data[3], data[4], data[5], data[6], data[7]
         );
@@ -160,27 +160,7 @@ impl SolaxBms {
     ) -> Result<Vec<T>> {
         reg05_data()
     }
-    // pub fn new(&mut self) -> SolaxBms {
-    //     self.pack_voltage_max = bmsdata.pack_voltage_max;
-    //     self.slave_voltage_max = bmsdata.slave_voltage_max; // + (bmsdata.pack_volts as f32 * 0.1) as u16; // +3v based on know good fox
-    //     self.slave_voltage_min = bmsdata.slave_voltage_min;
-    //     self.charge_max = bmsdata.charge_max;
-    //     self.discharge_max = bmsdata.discharge_max;
-    //     self.voltage = bmsdata.pack_volts;
-    //     self.current = bmsdata.current as i16; // 100mA = 1
-    //     self.capacity = bmsdata.soc;
-    //     self.kwh = bmsdata.kwh_remaining * 10;
-    //     self.cell_temp_min = min as i16 * 10;
-    //     self.cell_temp_max = max as i16 * 10;
-    //     // self.int_temp = (bmsdata.temps.iter().sum::<i8>() / bmsdata.temps.len() as i8) as i16;
-    //     self.int_temp = bmsdata.temps[6] as i16 * 10;
-    //     self.cell_voltage_min = (bmsdata.min_volts as f32 * 0.01) as u16;
-    //     self.cell_voltage_max = 1 + (bmsdata.max_volts as f32 * 0.01) as u16;
-    //     self.wh_total = 10000;
-    //     self.contactor = false; //bmsdata.read_contactor(),
-    //     self.v_max = bmsdata.max_volts;
-    //     self.v_min = bmsdata.min_volts;
-    // }
+
     fn announce<T: embedded_hal::can::Frame>(&self) -> Result<T> {
         T::new(Id::Extended(ExtendedId::new(0x100A001).unwrap()), &[0u8; 0]).context("1873")
     }
@@ -316,11 +296,8 @@ impl SolaxBms {
 
     fn x1872_decode(self, bytes: &[u8]) {
         let ints = as_u16le(bytes);
-        println!(
-            "{:02x?} {:?} = Pack limits - Max {}V Min {}V Charge {}A Discharge {}A",
-            // self.ID,
-            bytes,
-            ints,
+        info!(
+            "Pack limits - Max {}V Min {}V Charge {}A Discharge {}A",
             ints[0] as f32 * 0.1,
             ints[1] as f32 * 0.1,
             ints[2] as f32 * 0.1,
@@ -342,14 +319,11 @@ impl SolaxBms {
 
     fn x1873_decode(self, bytes: &[u8]) {
         let ints = as_u16le(bytes);
-        println!(
-            "{:02x?} {:?} = Pack Now - {}V  {}A  SoC:{}%  {}kWh",
-            // self.ID,
-            bytes,
-            ints,
+        info!(
+            "Pack Now - {}V  {}A  SoC:{}%  {}kWh",
             ints[0] as f32 * 0.1,
             (ints[1] as i16) as f32 / 10.0,
-            ints[2] as u16,
+            ints[2],
             ints[3] as f32 * 0.01,
         );
     }
@@ -369,11 +343,8 @@ impl SolaxBms {
     fn x1874_decode(self, bytes: &[u8]) //Cell data
     {
         let ints = as_u16le(bytes);
-        println!(
-            "{:02x?} {:?} = Pack limts - Max {}º Min {}º Max {}V Min {}V ",
-            // self.ID,
-            bytes,
-            ints,
+        info!(
+            "Pack limts - Max {}º Min {}º Max {}V Min {}V ",
             ints[0] as f32 * 0.1,
             ints[1] as f32 * 0.1,
             ints[2] as f32 * 0.1,
@@ -398,11 +369,8 @@ impl SolaxBms {
     fn x1875_decode(self, bytes: &[u8]) // BMS status
     {
         let ints = as_u16le(bytes);
-        println!(
-            "{:02x?} {:?} = BMS status - Int temp {}ºC Unknown {} Contactor {}",
-            // self.ID,
-            bytes,
-            ints,
+        info!(
+            "BMS status - Int temp {}ºC Unknown {} Contactor {}",
             ints[0] as f32 * 0.1,
             bytes[3] != 1,
             bytes[5] != 1,
@@ -422,11 +390,8 @@ impl SolaxBms {
     {
         // let x1875 = vec![0x53, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00];
         let ints = as_u16le(bytes);
-        println!(
-            "{:02x?} {:?} = Pack status - {}? {}mV {}? {}mV",
-            // self.ID,
-            bytes,
-            ints,
+        info!(
+            "Pack status - {}? {}mV {}? {}mV",
             ints[0] as f32 * 1.0,
             ints[1] as f32 * 1.0,
             ints[2] as f32 * 1.0,
