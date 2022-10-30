@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use embedded_hal::can::{ExtendedId, Id};
 use log::info;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 const REG02: &[u8] = &[0x2, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
@@ -55,6 +55,7 @@ pub struct SolaxBms {
     pub announce: Option<Instant>,
     pub last_success: Option<Instant>,
     pub last_rx: Option<Instant>,
+    pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
 }
 
@@ -63,8 +64,27 @@ impl SolaxBms {
     pub fn set_valid(&mut self) {
         self.valid = true
     }
-    pub fn is_valid(&mut self) -> bool {
-        self.valid
+    pub fn is_valid(&self) -> bool {
+        self.valid && self.is_fresh()
+    }
+
+    pub fn is_fresh(&self) -> bool {
+        match self.timestamp {
+            Some(time) => {
+                if time.elapsed() < Duration::from_secs(60) {
+                    info!("Data is {:?} old", time.elapsed(),);
+                    true
+                } else {
+                    info!(
+                        "Data is too old {:?}, timeout is {:?}",
+                        time.elapsed(),
+                        Duration::from_secs(60)
+                    );
+                    false
+                }
+            }
+            None => false,
+        }
     }
     pub fn parser<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
         &mut self,
