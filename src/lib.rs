@@ -57,7 +57,7 @@ pub struct SolaxBms {
     pub last_rx: Option<Instant>,
     pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
-    timout: Duration,
+    timeout: Duration,
 }
 
 impl SolaxBms {
