@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use embedded_hal::can::{ExtendedId, Id};
 // use heapless::Vec; Need to move to no_std
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
@@ -19,7 +19,7 @@ Need to transfer fixed values off to Slave BMS and recieve them via json UART co
 
 */
 #[cfg(feature = "serde_support")]
-#[derive(Deserialize, Debug, Default, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone, Copy)]
 pub enum SolaxStatus {
     #[default]
     NoInverter,
@@ -28,7 +28,7 @@ pub enum SolaxStatus {
 }
 
 #[cfg(feature = "serde_support")]
-#[derive(Deserialize, Debug, Default, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone, Copy)]
 pub struct SolaxBms {
     // no conversions out of this struct
     pub status: SolaxStatus,
@@ -55,13 +55,13 @@ pub struct SolaxBms {
     pub byte2: u8,
     pub counter: u8,
     pub valid: bool,
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     pub announce: Option<Instant>,
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     pub last_success: Option<Instant>,
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     pub last_rx: Option<Instant>,
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
 }
