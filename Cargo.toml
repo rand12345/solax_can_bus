@@ -5,8 +5,15 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["serde_support", "std"]
+serde_support = ["dep:serde"]
+no_std = ["dep:heapless"]
+std = []
 
 [dependencies]
 embedded-hal = "0.2.7"
 anyhow = "1"
 log = "0.4.17"
+heapless = {version = "0.7", optional = true}
+serde = { version = "1.0.152", features=["derive"], default-features = false, optional = true }

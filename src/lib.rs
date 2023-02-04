@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use embedded_hal::can::{ExtendedId, Id};
-// use log::println;
+// use heapless::Vec; Need to move to no_std
+use serde::Deserialize;
 use std::time::{Duration, Instant};
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
@@ -17,7 +18,8 @@ const REG05: &[u8] = &[0x5, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 Need to transfer fixed values off to Slave BMS and recieve them via json UART comms
 
 */
-#[derive(Debug, Default, Clone, Copy)]
+#[cfg(feature = "serde_support")]
+#[derive(Deserialize, Debug, Default, Clone, Copy)]
 pub enum SolaxStatus {
     #[default]
     NoInverter,
@@ -25,6 +27,46 @@ pub enum SolaxStatus {
     InverterReady,
 }
 
+#[cfg(feature = "serde_support")]
+#[derive(Deserialize, Debug, Default, Clone, Copy)]
+pub struct SolaxBms {
+    // no conversions out of this struct
+    pub status: SolaxStatus,
+    pub slave_voltage_max: u16, // 1000 = 100.0v
+    pub slave_voltage_min: u16, // 800 = 80.0v
+    pub charge_max: u16,        // 201 = 20A
+    pub discharge_max: u16,     // 350 = 35A
+    pub voltage: u16,           // 1130 = 113.0V
+    pub current: i16,           // -2 = -0.2A
+    pub capacity: u16,          // %
+    pub kwh: u16,               // 419 = 41.9 Kwh (* 0.1)
+    pub cell_temp_min: i16,     // 18 = 1.8ºC signed
+    pub cell_temp_max: i16,     // 21 = 2.1ºC
+    pub cell_voltage_min: u16,  // 40 = 4.0V
+    pub cell_voltage_max: u16,  // 41 = 4.1V
+    pub pack_voltage_max: u16,  // 4100 = 410.0V
+    pub wh_total: u32,          // watt hours total in wh
+    pub contactor: bool,
+    pub int_temp: i16, // 20 = 20ºC
+    pub v_max: u16,    // 4501 = 45.01º
+    pub v_min: u16,    // 1501 = 15.01º
+    pub id: u8,
+    pub byte1: u8,
+    pub byte2: u8,
+    pub counter: u8,
+    pub valid: bool,
+    #[serde(skip_deserializing)]
+    pub announce: Option<Instant>,
+    #[serde(skip_deserializing)]
+    pub last_success: Option<Instant>,
+    #[serde(skip_deserializing)]
+    pub last_rx: Option<Instant>,
+    #[serde(skip_deserializing)]
+    pub timestamp: Option<Instant>,
+    pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
+}
+
+#[cfg(not(feature = "serde_support"))]
 #[derive(Debug, Default, Clone, Copy)]
 pub struct SolaxBms {
     // no conversions out of this struct
@@ -59,8 +101,10 @@ pub struct SolaxBms {
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
 }
 
+#[cfg(feature = "std")]
 impl SolaxBms {
     // Returns Some(vec of can frames) or Ok(None) for no tx frames needed
+
     pub fn set_valid(&mut self) {
         self.valid = true
     }
@@ -169,7 +213,7 @@ impl SolaxBms {
         self.byte1 = 0x0d;
         self.byte2 = 0x01;
 
-        println!("SENDING TO INV -> {:#?}", self);
+        println!("SENDING TO INV -> {self:#?}");
         if self.counter == 1 {
             (self.byte1, self.byte2) = (0xf7, 0x16);
         } else if self.counter == 2 {
@@ -178,7 +222,7 @@ impl SolaxBms {
         } else if self.counter == 3 {
             (self.byte1, self.byte2) = (0x0d, 0x01);
         } /*else if self.counter == 4 {
-                                                    (self.byte1, self.byte2) = (0x1d, 0x10);
+                                                      (self.byte1, self.byte2) = (0x1d, 0x10);
           }*/
 
         // taking into account incrementer
@@ -357,10 +401,9 @@ impl SolaxBms {
 
         let mut tx_payload: [u8; 8] = [0; 8];
         [tx_payload[0], tx_payload[1]] = self.int_temp.to_le_bytes();
-        // [tx_payload[2], tx_payload[3]] = [0x4, 0x0];
-
         tx_payload[2] = 0x1; // quanity of batteries https://secondlifestorage.com/index.php?threads/three-phase-hv-hybrid-inverter-solax-x3-hybrid-8-0-solax-triple-power-t58-hv-battery.10747/post-84312
-        tx_payload[4] = 1; //self.contactor as u8;
+                             // tx_payload[4] = 1; //self.contactor as u8;
+        tx_payload[4] = self.contactor as u8;
 
         self.x1875_decode(&tx_payload);
         tx_payload
