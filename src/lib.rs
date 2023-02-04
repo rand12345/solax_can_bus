@@ -64,6 +64,7 @@ pub struct SolaxBms {
     #[serde(skip)]
     pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
+    timeout: Duration,
 }
 
 #[cfg(not(feature = "serde_support"))]
@@ -99,6 +100,7 @@ pub struct SolaxBms {
     pub last_rx: Option<Instant>,
     pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
+    timeout: Duration,
 }
 
 #[cfg(feature = "std")]
@@ -115,14 +117,14 @@ impl SolaxBms {
     pub fn is_fresh(&self) -> bool {
         match self.timestamp {
             Some(time) => {
-                if time.elapsed() < Duration::from_secs(60) {
+                if time.elapsed() < self.timeout {
                     println!("Data is {:?} old", time.elapsed(),);
                     true
                 } else {
-                    println!(
+                    eprintln!(
                         "Data is too old {:?}, timeout is {:?}",
                         time.elapsed(),
-                        Duration::from_secs(60)
+                        self.timeout
                     );
                     false
                 }
@@ -133,7 +135,9 @@ impl SolaxBms {
     pub fn parser<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
         &mut self,
         can_frame: T,
+        timeout: Duration,
     ) -> Result<Option<Vec<T>>> {
+        self.timeout = timeout;
         if can_frame.id() != Id::Extended(ExtendedId::new(0x1871).unwrap()) {
             return Err(anyhow!(
                 "{:02x?} is not a valid Solax can Id",
