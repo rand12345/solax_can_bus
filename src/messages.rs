@@ -4,7 +4,7 @@
 #![allow(clippy::excessive_precision, clippy::manual_range_contains, clippy::absurd_extreme_comparisons)]
 #![deny(clippy::integer_arithmetic)]
 
-//! Message definitions from file `"example.dbc"`
+//! Message definitions from file `"solax.dbc"`
 //!
 //! - Version: `Version("0.1")`
 
