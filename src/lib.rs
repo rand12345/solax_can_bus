@@ -50,8 +50,8 @@ pub struct SolaxBms {
     pub kwh: f32,               // 419 = 41.9 Kwh (* 0.1)
     pub cell_temp_min: f32,     // 18 = 1.8ºC signed
     pub cell_temp_max: f32,     // 21 = 2.1ºC
-    pub cell_voltage_min: f32,  // 40 = 4.0V
-    pub cell_voltage_max: f32,  // 41 = 4.1V
+    pub cell_voltage_min: u16,  // 40 = 4.0V
+    pub cell_voltage_max: u16,  // 41 = 4.1V
     pub pack_voltage_max: f32,  // 4100 = 410.0V
     pub wh_total: u32,          // watt hours total in wh
     pub contactor: bool,
@@ -357,8 +357,8 @@ impl SolaxBms {
     fn x1874(self) -> Result<[u8; 8]> //Cell data
     {
         let tx_payload: [u8; 8] = BmsCellData::new(
-            self.cell_voltage_min,
-            self.cell_voltage_max,
+            self.cell_voltage_min.into(),
+            self.cell_voltage_max.into(),
             self.cell_temp_min,
             self.cell_temp_max,
         )?
