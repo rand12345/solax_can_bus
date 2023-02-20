@@ -357,10 +357,10 @@ impl SolaxBms {
     fn x1874(self) -> Result<[u8; 8]> //Cell data
     {
         let tx_payload: [u8; 8] = BmsCellData::new(
-            self.cell_temp_min,
-            self.cell_temp_max,
             self.cell_voltage_min,
             self.cell_voltage_max,
+            self.cell_temp_min,
+            self.cell_temp_max,
         )?
         .raw()
         .try_into()?;
@@ -383,7 +383,7 @@ impl SolaxBms {
 
     fn x1875(self) -> Result<[u8; 8]> {
         //BMS_PackData
-        let tx_payload: [u8; 8] = BmsStatus::new(self.contactor, self.int_temp)?
+        let tx_payload: [u8; 8] = BmsStatus::new(true, self.contactor, self.int_temp)?
             .raw()
             .try_into()?;
         self.x1875_decode(&tx_payload);
@@ -404,10 +404,9 @@ impl SolaxBms {
 
     fn x1876(self) -> Result<[u8; 8]> // BMS_PackStats
     {
-        let tx_payload: [u8; 8] =
-            BmsPackTemps::new(self.cell_temp_max, self.cell_temp_min, 0.0, 0.0)?
-                .raw()
-                .try_into()?;
+        let tx_payload: [u8; 8] = BmsPackTemps::new(true, self.cell_temp_max, self.cell_temp_min)?
+            .raw()
+            .try_into()?;
         self.x1876_decode(&tx_payload);
         Ok(tx_payload)
     }

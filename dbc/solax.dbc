@@ -46,12 +46,13 @@ BO_ 6259 BMS_PackData: 8 Solax_inverter
    SG_ kwh_remaining : 48|16@1+ (0.1,0) [0|100] "kWh" Solax_inverter
 
 BO_ 6260 BMS_CellData: 8 Solax_inverter
-   SG_ cell_temperature_low : 16|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
-   SG_ cell_temperature_high : 0|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
-   SG_ cell_volts_low : 48|16@1+ (100,0) [2900|4200] "mV" Solax_inverter
-   SG_ cell_volts_high : 32|16@1+ (100,0) [2900|4200] "mV" Solax_inverter
+   SG_ cell_volts_low : 16|16@1+ (0.1,0) [2900|4200] "mV" Solax_inverter
+   SG_ cell_volts_high : 0|16@1+ (0.1,0) [2900|4200] "mV" Solax_inverter
+   SG_ cell_temperature_low : 48|16@1+ (100,0) [-40|60] "C" Solax_inverter
+   SG_ cell_temperature_high : 32|16@1+ (100,0) [-40|60] "C" Solax_inverter
 
 BO_ 6261 BMS_Status: 8 Solax_inverter
+   SG_ bit : 16|1@1- (1,0) [0|1] "" Solax_inverter
    SG_ contactor : 32|1@1- (1,0) [0|1] "" Solax_inverter
    SG_ pack_temperature : 0|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
 
