@@ -596,7 +596,7 @@ impl BmsCellData {
     ///
     /// - Start bit: 16
     /// - Signal size: 16 bits
-    /// - Factor: 0.1
+    /// - Factor: 100
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
@@ -604,7 +604,7 @@ impl BmsCellData {
     pub fn cell_volts_low_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
         
-        let factor = 0.1_f32;
+        let factor = 100_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
@@ -616,7 +616,7 @@ impl BmsCellData {
         if value < 2900_f32 || 4200_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
-        let factor = 0.1_f32;
+        let factor = 100_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
@@ -639,7 +639,7 @@ impl BmsCellData {
     ///
     /// - Start bit: 0
     /// - Signal size: 16 bits
-    /// - Factor: 0.1
+    /// - Factor: 100
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
@@ -647,7 +647,7 @@ impl BmsCellData {
     pub fn cell_volts_high_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
         
-        let factor = 0.1_f32;
+        let factor = 100_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
@@ -659,7 +659,7 @@ impl BmsCellData {
         if value < 2900_f32 || 4200_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
-        let factor = 0.1_f32;
+        let factor = 100_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
@@ -682,7 +682,7 @@ impl BmsCellData {
     ///
     /// - Start bit: 48
     /// - Signal size: 16 bits
-    /// - Factor: 100
+    /// - Factor: 0.1
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
@@ -690,7 +690,7 @@ impl BmsCellData {
     pub fn cell_temperature_low_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
         
-        let factor = 100_f32;
+        let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
@@ -702,7 +702,7 @@ impl BmsCellData {
         if value < -40_f32 || 60_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
-        let factor = 100_f32;
+        let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
@@ -725,7 +725,7 @@ impl BmsCellData {
     ///
     /// - Start bit: 32
     /// - Signal size: 16 bits
-    /// - Factor: 100
+    /// - Factor: 0.1
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
@@ -733,7 +733,7 @@ impl BmsCellData {
     pub fn cell_temperature_high_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
         
-        let factor = 100_f32;
+        let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
@@ -745,7 +745,7 @@ impl BmsCellData {
         if value < -40_f32 || 60_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
-        let factor = 100_f32;
+        let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
