@@ -1023,7 +1023,7 @@ impl BmsPackTemps {
     
     /// Get raw value of bit
     ///
-    /// - Start bit: 3
+    /// - Start bit: 1
     /// - Signal size: 1 bits
     /// - Factor: 1
     /// - Offset: 0
@@ -1031,7 +1031,7 @@ impl BmsPackTemps {
     /// - Value type: Signed
     #[inline(always)]
     pub fn bit_raw(&self) -> bool {
-        let signal = self.raw.view_bits::<Lsb0>()[3..4].load_le::<u8>();
+        let signal = self.raw.view_bits::<Lsb0>()[1..2].load_le::<u8>();
         
         let signal  = i8::from_ne_bytes(signal.to_ne_bytes());
         signal == 1
@@ -1042,7 +1042,7 @@ impl BmsPackTemps {
     pub fn set_bit(&mut self, value: bool) -> Result<(), CanError> {
         let value = value as u8;
         let value = u8::from_ne_bytes(value.to_ne_bytes());
-        self.raw.view_bits_mut::<Lsb0>()[3..4].store_le(value);
+        self.raw.view_bits_mut::<Lsb0>()[1..2].store_le(value);
         Ok(())
     }
     
