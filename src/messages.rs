@@ -991,13 +991,13 @@ pub struct BmsPackTemps {
 impl BmsPackTemps {
     pub const MESSAGE_ID: u32 = 6262;
     
-    pub const CELL_MILLIVOLTS_HIGH_MIN: f32 = 2900_f32;
-    pub const CELL_MILLIVOLTS_HIGH_MAX: f32 = 4200_f32;
-    pub const CELL_MILLIVOLTS_LOW_MIN: f32 = 2900_f32;
-    pub const CELL_MILLIVOLTS_LOW_MAX: f32 = 4200_f32;
+    pub const CELL_MILLIVOLTS_HIGH_MIN: u16 = 2900_u16;
+    pub const CELL_MILLIVOLTS_HIGH_MAX: u16 = 4200_u16;
+    pub const CELL_MILLIVOLTS_LOW_MIN: u16 = 2900_u16;
+    pub const CELL_MILLIVOLTS_LOW_MAX: u16 = 4200_u16;
     
     /// Construct new BMS_PackTemps from values
-    pub fn new(bit: bool, cell_millivolts_high: f32, cell_millivolts_low: f32) -> Result<Self, CanError> {
+    pub fn new(bit: bool, cell_millivolts_high: u16, cell_millivolts_low: u16) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
         res.set_bit(bit)?;
         res.set_cell_millivolts_high(cell_millivolts_high)?;
@@ -1053,7 +1053,7 @@ impl BmsPackTemps {
     /// - Unit: "mV"
     /// - Receivers: Solax_inverter
     #[inline(always)]
-    pub fn cell_millivolts_high(&self) -> f32 {
+    pub fn cell_millivolts_high(&self) -> u16 {
         self.cell_millivolts_high_raw()
     }
     
@@ -1061,30 +1061,24 @@ impl BmsPackTemps {
     ///
     /// - Start bit: 16
     /// - Signal size: 16 bits
-    /// - Factor: 0
+    /// - Factor: 1
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
     #[inline(always)]
-    pub fn cell_millivolts_high_raw(&self) -> f32 {
+    pub fn cell_millivolts_high_raw(&self) -> u16 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
         
-        let factor = 0_f32;
-        let offset = 0_f32;
-        (signal as f32) * factor + offset
+        signal
     }
     
     /// Set value of cell_millivolts_high
     #[inline(always)]
-    pub fn set_cell_millivolts_high(&mut self, value: f32) -> Result<(), CanError> {
+    pub fn set_cell_millivolts_high(&mut self, value: u16) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < 2900_f32 || 4200_f32 < value {
+        if value < 2900_u16 || 4200_u16 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6262 });
         }
-        let factor = 0_f32;
-        let offset = 0_f32;
-        let value = ((value - offset) / factor) as u16;
-        
         self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
         Ok(())
     }
@@ -1096,7 +1090,7 @@ impl BmsPackTemps {
     /// - Unit: "mV"
     /// - Receivers: Solax_inverter
     #[inline(always)]
-    pub fn cell_millivolts_low(&self) -> f32 {
+    pub fn cell_millivolts_low(&self) -> u16 {
         self.cell_millivolts_low_raw()
     }
     
@@ -1104,30 +1098,24 @@ impl BmsPackTemps {
     ///
     /// - Start bit: 48
     /// - Signal size: 16 bits
-    /// - Factor: 0
+    /// - Factor: 1
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
     #[inline(always)]
-    pub fn cell_millivolts_low_raw(&self) -> f32 {
+    pub fn cell_millivolts_low_raw(&self) -> u16 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
         
-        let factor = 0_f32;
-        let offset = 0_f32;
-        (signal as f32) * factor + offset
+        signal
     }
     
     /// Set value of cell_millivolts_low
     #[inline(always)]
-    pub fn set_cell_millivolts_low(&mut self, value: f32) -> Result<(), CanError> {
+    pub fn set_cell_millivolts_low(&mut self, value: u16) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < 2900_f32 || 4200_f32 < value {
+        if value < 2900_u16 || 4200_u16 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6262 });
         }
-        let factor = 0_f32;
-        let offset = 0_f32;
-        let value = ((value - offset) / factor) as u16;
-        
         self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
         Ok(())
     }
@@ -1165,8 +1153,8 @@ impl core::fmt::Debug for BmsPackTemps {
 impl<'a> Arbitrary<'a> for BmsPackTemps {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
         let bit = u.int_in_range(0..=1)? == 1;
-        let cell_millivolts_high = u.float_in_range(2900_f32..=4200_f32)?;
-        let cell_millivolts_low = u.float_in_range(2900_f32..=4200_f32)?;
+        let cell_millivolts_high = u.int_in_range(2900..=4200)?;
+        let cell_millivolts_low = u.int_in_range(2900..=4200)?;
         BmsPackTemps::new(bit,cell_millivolts_high,cell_millivolts_low).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }

@@ -58,8 +58,8 @@ BO_ 6261 BMS_Status: 8 Solax_inverter
 
 BO_ 6262 BMS_PackTemps: 8 Solax_inverter
    SG_ bit : 0|1@1- (1,0) [0|1] "" Solax_inverter
-   SG_ cell_millivolts_high : 16|16@1+ (0,0) [2900|4200] "mV" Solax_inverter
-   SG_ cell_millivolts_low : 48|16@1+ (0,0)  [2900|4200] "mV" Solax_inverter
+   SG_ cell_millivolts_high : 16|16@1+ (1,0) [2900|4200] "mV" Solax_inverter
+   SG_ cell_millivolts_low : 48|16@1+ (1,0)  [2900|4200] "mV" Solax_inverter
 
 BO_ 6264 BMS_PackStats: 8 Solax_inverter
    SG_ pack_voltage : 0|16@1+ (0.1,0) [290|400] "V" Solax_inverter
