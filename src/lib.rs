@@ -404,9 +404,10 @@ impl SolaxBms {
 
     fn x1876(self) -> Result<[u8; 8]> // BMS_PackStats
     {
-        let tx_payload: [u8; 8] = BmsPackTemps::new(true, self.cell_temp_max, self.cell_temp_min)?
-            .raw()
-            .try_into()?;
+        let tx_payload: [u8; 8] =
+            BmsPackTemps::new(true, self.cell_voltage_max, self.cell_voltage_min)?
+                .raw()
+                .try_into()?;
         self.x1876_decode(&tx_payload);
         Ok(tx_payload)
     }

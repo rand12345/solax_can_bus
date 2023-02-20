@@ -475,7 +475,7 @@ impl BmsPackData {
     ///
     /// - Start bit: 48
     /// - Signal size: 16 bits
-    /// - Factor: 0.1
+    /// - Factor: 0.01
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
@@ -483,7 +483,7 @@ impl BmsPackData {
     pub fn kwh_remaining_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
         
-        let factor = 0.1_f32;
+        let factor = 0.01_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
@@ -495,7 +495,7 @@ impl BmsPackData {
         if value < 0_f32 || 100_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6259 });
         }
-        let factor = 0.1_f32;
+        let factor = 0.01_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
@@ -585,7 +585,7 @@ impl BmsCellData {
     ///
     /// - Min: 2900
     /// - Max: 4200
-    /// - Unit: "mV"
+    /// - Unit: "V"
     /// - Receivers: Solax_inverter
     #[inline(always)]
     pub fn cell_volts_low(&self) -> f32 {
@@ -594,7 +594,7 @@ impl BmsCellData {
     
     /// Get raw value of cell_volts_low
     ///
-    /// - Start bit: 16
+    /// - Start bit: 48
     /// - Signal size: 16 bits
     /// - Factor: 100
     /// - Offset: 0
@@ -602,7 +602,7 @@ impl BmsCellData {
     /// - Value type: Unsigned
     #[inline(always)]
     pub fn cell_volts_low_raw(&self) -> f32 {
-        let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
+        let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
         
         let factor = 100_f32;
         let offset = 0_f32;
@@ -620,7 +620,7 @@ impl BmsCellData {
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
-        self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
+        self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
         Ok(())
     }
     
@@ -628,7 +628,7 @@ impl BmsCellData {
     ///
     /// - Min: 2900
     /// - Max: 4200
-    /// - Unit: "mV"
+    /// - Unit: "V"
     /// - Receivers: Solax_inverter
     #[inline(always)]
     pub fn cell_volts_high(&self) -> f32 {
@@ -637,7 +637,7 @@ impl BmsCellData {
     
     /// Get raw value of cell_volts_high
     ///
-    /// - Start bit: 0
+    /// - Start bit: 32
     /// - Signal size: 16 bits
     /// - Factor: 100
     /// - Offset: 0
@@ -645,7 +645,7 @@ impl BmsCellData {
     /// - Value type: Unsigned
     #[inline(always)]
     pub fn cell_volts_high_raw(&self) -> f32 {
-        let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
+        let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
         
         let factor = 100_f32;
         let offset = 0_f32;
@@ -663,7 +663,7 @@ impl BmsCellData {
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
-        self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
+        self.raw.view_bits_mut::<Lsb0>()[32..48].store_le(value);
         Ok(())
     }
     
@@ -680,7 +680,7 @@ impl BmsCellData {
     
     /// Get raw value of cell_temperature_low
     ///
-    /// - Start bit: 48
+    /// - Start bit: 16
     /// - Signal size: 16 bits
     /// - Factor: 0.1
     /// - Offset: 0
@@ -688,7 +688,7 @@ impl BmsCellData {
     /// - Value type: Unsigned
     #[inline(always)]
     pub fn cell_temperature_low_raw(&self) -> f32 {
-        let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
+        let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
         
         let factor = 0.1_f32;
         let offset = 0_f32;
@@ -706,7 +706,7 @@ impl BmsCellData {
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
-        self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
+        self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
         Ok(())
     }
     
@@ -723,7 +723,7 @@ impl BmsCellData {
     
     /// Get raw value of cell_temperature_high
     ///
-    /// - Start bit: 32
+    /// - Start bit: 0
     /// - Signal size: 16 bits
     /// - Factor: 0.1
     /// - Offset: 0
@@ -731,7 +731,7 @@ impl BmsCellData {
     /// - Value type: Unsigned
     #[inline(always)]
     pub fn cell_temperature_high_raw(&self) -> f32 {
-        let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
+        let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
         
         let factor = 0.1_f32;
         let offset = 0_f32;
@@ -749,7 +749,7 @@ impl BmsCellData {
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
-        self.raw.view_bits_mut::<Lsb0>()[32..48].store_le(value);
+        self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
         Ok(())
     }
     
@@ -991,17 +991,17 @@ pub struct BmsPackTemps {
 impl BmsPackTemps {
     pub const MESSAGE_ID: u32 = 6262;
     
-    pub const TEMP1_MIN: f32 = -40_f32;
-    pub const TEMP1_MAX: f32 = 60_f32;
-    pub const TEMP2_MIN: f32 = -40_f32;
-    pub const TEMP2_MAX: f32 = 60_f32;
+    pub const CELL_MILLIVOLTS_HIGH_MIN: f32 = 2900_f32;
+    pub const CELL_MILLIVOLTS_HIGH_MAX: f32 = 4200_f32;
+    pub const CELL_MILLIVOLTS_LOW_MIN: f32 = 2900_f32;
+    pub const CELL_MILLIVOLTS_LOW_MAX: f32 = 4200_f32;
     
     /// Construct new BMS_PackTemps from values
-    pub fn new(bit: bool, temp1: f32, temp2: f32) -> Result<Self, CanError> {
+    pub fn new(bit: bool, cell_millivolts_high: f32, cell_millivolts_low: f32) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
         res.set_bit(bit)?;
-        res.set_temp1(temp1)?;
-        res.set_temp2(temp2)?;
+        res.set_cell_millivolts_high(cell_millivolts_high)?;
+        res.set_cell_millivolts_low(cell_millivolts_low)?;
         Ok(res)
     }
     
@@ -1046,42 +1046,42 @@ impl BmsPackTemps {
         Ok(())
     }
     
-    /// temp1
+    /// cell_millivolts_high
     ///
-    /// - Min: -40
-    /// - Max: 60
-    /// - Unit: "C"
+    /// - Min: 2900
+    /// - Max: 4200
+    /// - Unit: "mV"
     /// - Receivers: Solax_inverter
     #[inline(always)]
-    pub fn temp1(&self) -> f32 {
-        self.temp1_raw()
+    pub fn cell_millivolts_high(&self) -> f32 {
+        self.cell_millivolts_high_raw()
     }
     
-    /// Get raw value of temp1
+    /// Get raw value of cell_millivolts_high
     ///
     /// - Start bit: 16
     /// - Signal size: 16 bits
-    /// - Factor: 0.01
+    /// - Factor: 0
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
     #[inline(always)]
-    pub fn temp1_raw(&self) -> f32 {
+    pub fn cell_millivolts_high_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
         
-        let factor = 0.01_f32;
+        let factor = 0_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
     
-    /// Set value of temp1
+    /// Set value of cell_millivolts_high
     #[inline(always)]
-    pub fn set_temp1(&mut self, value: f32) -> Result<(), CanError> {
+    pub fn set_cell_millivolts_high(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < -40_f32 || 60_f32 < value {
+        if value < 2900_f32 || 4200_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6262 });
         }
-        let factor = 0.01_f32;
+        let factor = 0_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
@@ -1089,42 +1089,42 @@ impl BmsPackTemps {
         Ok(())
     }
     
-    /// temp2
+    /// cell_millivolts_low
     ///
-    /// - Min: -40
-    /// - Max: 60
-    /// - Unit: "C"
+    /// - Min: 2900
+    /// - Max: 4200
+    /// - Unit: "mV"
     /// - Receivers: Solax_inverter
     #[inline(always)]
-    pub fn temp2(&self) -> f32 {
-        self.temp2_raw()
+    pub fn cell_millivolts_low(&self) -> f32 {
+        self.cell_millivolts_low_raw()
     }
     
-    /// Get raw value of temp2
+    /// Get raw value of cell_millivolts_low
     ///
     /// - Start bit: 48
     /// - Signal size: 16 bits
-    /// - Factor: 0.01
+    /// - Factor: 0
     /// - Offset: 0
     /// - Byte order: LittleEndian
     /// - Value type: Unsigned
     #[inline(always)]
-    pub fn temp2_raw(&self) -> f32 {
+    pub fn cell_millivolts_low_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
         
-        let factor = 0.01_f32;
+        let factor = 0_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
     
-    /// Set value of temp2
+    /// Set value of cell_millivolts_low
     #[inline(always)]
-    pub fn set_temp2(&mut self, value: f32) -> Result<(), CanError> {
+    pub fn set_cell_millivolts_low(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < -40_f32 || 60_f32 < value {
+        if value < 2900_f32 || 4200_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6262 });
         }
-        let factor = 0.01_f32;
+        let factor = 0_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
         
@@ -1152,8 +1152,8 @@ impl core::fmt::Debug for BmsPackTemps {
         if f.alternate() {
             f.debug_struct("BmsPackTemps")
                 .field("bit", &self.bit())
-                .field("temp1", &self.temp1())
-                .field("temp2", &self.temp2())
+                .field("cell_millivolts_high", &self.cell_millivolts_high())
+                .field("cell_millivolts_low", &self.cell_millivolts_low())
             .finish()
         } else {
             f.debug_tuple("BmsPackTemps").field(&self.raw).finish()
@@ -1165,9 +1165,9 @@ impl core::fmt::Debug for BmsPackTemps {
 impl<'a> Arbitrary<'a> for BmsPackTemps {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
         let bit = u.int_in_range(0..=1)? == 1;
-        let temp1 = u.float_in_range(-40_f32..=60_f32)?;
-        let temp2 = u.float_in_range(-40_f32..=60_f32)?;
-        BmsPackTemps::new(bit,temp1,temp2).map_err(|_| arbitrary::Error::IncorrectFormat)
+        let cell_millivolts_high = u.float_in_range(2900_f32..=4200_f32)?;
+        let cell_millivolts_low = u.float_in_range(2900_f32..=4200_f32)?;
+        BmsPackTemps::new(bit,cell_millivolts_high,cell_millivolts_low).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
