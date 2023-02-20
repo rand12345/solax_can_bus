@@ -239,7 +239,7 @@ impl SolaxBms {
             // (self.contactor, self.id, self.byte1, self.byte2) = (true, 0x53, 0x1d, 0x20);
             (self.contactor, self.id, self.byte1, self.byte2) = (true, 0x53, 0x1d, 0x20);
         } else if self.counter == 3 {
-            (self.byte1, self.byte2) = (0x0d, 0x01);
+            (self.id, self.byte1, self.byte2) = (0x53, 0x0d, 0x01);
         }
         // else if self.counter == 4 {
         // (self.byte1, self.byte2) = (0x1d, 0x10);
