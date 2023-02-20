@@ -321,6 +321,7 @@ impl SolaxBms {
     }
 
     fn x1872_decode(self, bytes: &[u8]) {
+        log::debug!("0x1872:{bytes:02x?}");
         let ints = as_u16le(bytes);
         println!(
             "Pack limits - Max {}V Min {}V Charge {}A Discharge {}A",
@@ -342,6 +343,7 @@ impl SolaxBms {
     }
 
     fn x1873_decode(self, bytes: &[u8]) {
+        log::debug!("0x1873:{bytes:02x?}");
         let ints = as_u16le(bytes);
         println!(
             "Pack Now - {}V  {}A  SoC:{}%  {}kWh",
@@ -368,6 +370,7 @@ impl SolaxBms {
 
     fn x1874_decode(self, bytes: &[u8]) //Cell data
     {
+        log::debug!("0x1874:{bytes:02x?}");
         let ints = as_u16le(bytes);
         println!(
             "Pack limts - Max {}º Min {}º Max {}V Min {}V ",
@@ -389,6 +392,7 @@ impl SolaxBms {
 
     fn x1875_decode(self, bytes: &[u8]) // BMS status
     {
+        log::debug!("0x1875:{bytes:02x?}");
         let ints = as_u16le(bytes);
         info!(
             "BMS status - Int temp {}ºC Unknown {} Contactor {}",
@@ -410,6 +414,7 @@ impl SolaxBms {
 
     fn x1876_decode(self, bytes: &[u8]) // BMS temps
     {
+        log::debug!("0x1876:{bytes:02x?}");
         let ints = as_u16le(bytes);
         info!(
             "Pack Temps - {}ºC {}ºC {}ºC {}ºC",
@@ -426,7 +431,7 @@ impl SolaxBms {
         tx_payload[4] = self.id;
         tx_payload[6] = self.byte1;
         tx_payload[7] = self.byte2;
-
+        log::debug!("0x1877:{tx_payload:02x?}");
         tx_payload
     }
 
@@ -438,8 +443,8 @@ impl SolaxBms {
         Ok(tx_payload)
     }
     fn x1878_decode(self, bytes: &[u8]) {
-        // let ints = as_u16le(bytes);
-        let v = u16::from_le_bytes([bytes[0], bytes[1]]);
+        log::debug!("0x1878:{bytes:02x?}");
+        let v = u16::from_le_bytes([bytes[0], bytes[1]]).saturating_div(10);
         let wh = f32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
         info!("Pack Master - Maximum pack volts threshold {v}V WattHours {wh}wH",);
     }
