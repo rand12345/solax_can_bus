@@ -1,6 +1,13 @@
+#![allow(unused_imports)]
+#![allow(clippy::enum_variant_names)]
+#![allow(dead_code)]
+#![allow(clippy::uninlined_format_args)]
+
 use anyhow::{anyhow, Context, Result};
 use embedded_hal::can::{ExtendedId, Id};
 // use heapless::Vec; Need to move to no_std
+use crate::messages::*;
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 mod messages; // to be implemented in later commit
@@ -119,10 +126,10 @@ impl SolaxBms {
         match self.timestamp {
             Some(time) => {
                 if time.elapsed() < self.timeout {
-                    println!("Data is {:?} old", time.elapsed(),);
+                    info!("Data is {:?} old", time.elapsed(),);
                     true
                 } else {
-                    eprintln!(
+                    error!(
                         "Data is too old {:?}, timeout is {:?}",
                         time.elapsed(),
                         self.timeout
@@ -167,6 +174,10 @@ impl SolaxBms {
             }
         };
 
+        // if !(1..=100u16).contains(&self.capacity) {
+        //     return Err(anyhow!("Data fault condition - SoC = {}", self.capacity));
+        // }
+
         Ok(match can_frame.data() {
             REG01 | REG02 => Some(self.reg01()?),
             REG05 => Some(self.reg05()?),
@@ -181,25 +192,28 @@ impl SolaxBms {
     fn reg01<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
         if self.announce.is_none() {
             self.announce = Some(Instant::now());
-            println!("Gateway announce sent");
+            warn!("Gateway announce sent");
             return Ok(vec![self.announce()?]);
         };
+
         match self.is_valid() {
             true => {
                 if self.counter > 3 {
                     self.status = SolaxStatus::InverterReady;
-                    self.tx_data_frames()
+                    // self.tx_data_frames()
+                    self.normal()?;
                 } else {
                     self.status = SolaxStatus::Handshake;
-                    self.handshake()
+                    self.handshake()?;
                 }
+                self.tx_data_dbc_frames()
             }
             false => Err(anyhow!("valid flag is false")),
         }
     }
     fn reg03(&mut self, data: &[u8]) {
         self.time = data[2..=7].try_into().unwrap_or_default();
-        println!(
+        info!(
             "Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02}",
             data[2], data[3], data[4], data[5], data[6], data[7]
         );
@@ -213,12 +227,12 @@ impl SolaxBms {
     fn announce<T: embedded_hal::can::Frame>(&self) -> Result<T> {
         T::new(Id::Extended(ExtendedId::new(0x100A001).unwrap()), &[0u8; 0]).context("1873")
     }
-    fn handshake<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
+    fn handshake(&mut self) -> Result<()> {
         self.id = 0x00;
         self.byte1 = 0x0d;
         self.byte2 = 0x01;
 
-        println!("SENDING TO INV -> {self:#?}");
+        info!("SENDING TO INV -> {self:#?}");
         if self.counter == 1 {
             (self.byte1, self.byte2) = (0xf7, 0x16);
         } else if self.counter == 2 {
@@ -226,55 +240,15 @@ impl SolaxBms {
             (self.contactor, self.id, self.byte1, self.byte2) = (true, 0x53, 0x1d, 0x20);
         } else if self.counter == 3 {
             (self.byte1, self.byte2) = (0x0d, 0x01);
-        } /*else if self.counter == 4 {
-                                                      (self.byte1, self.byte2) = (0x1d, 0x10);
-          }*/
-
-        // taking into account incrementer
-        let mut x1872_payload: [u8; 8] = [0; 8];
-        [x1872_payload[0], x1872_payload[1]] = self.slave_voltage_max.to_le_bytes();
-        [x1872_payload[2], x1872_payload[3]] = self.slave_voltage_min.to_le_bytes();
-
-        let mut x1878_payload: [u8; 8] = [0; 8];
-        [x1878_payload[0], x1878_payload[1]] = self.pack_voltage_max.to_le_bytes();
+        }
+        // else if self.counter == 4 {
+        // (self.byte1, self.byte2) = (0x1d, 0x10);
 
         self.counter += 1;
-        self.last_success = Some(Instant::now());
-        Ok(vec![
-            T::new(
-                Id::Extended(ExtendedId::new(0x1877).unwrap()),
-                &self.x1877(),
-            )
-            .context("1877")?,
-            T::new(
-                Id::Extended(ExtendedId::new(0x1872).unwrap()),
-                &x1872_payload,
-            )
-            .context("1872")?,
-            T::new(Id::Extended(ExtendedId::new(0x1873).unwrap()), &[0u8; 8]).context("1873")?,
-            T::new(Id::Extended(ExtendedId::new(0x1874).unwrap()), &[0u8; 8]).context("1874")?,
-            T::new(
-                Id::Extended(ExtendedId::new(0x1875).unwrap()),
-                &[0, 0, 2, 0, 0, 0, 0, 0],
-            )
-            .context("1875")?,
-            T::new(Id::Extended(ExtendedId::new(0x1876).unwrap()), &[0u8; 8]).context("1876")?,
-            T::new(
-                Id::Extended(ExtendedId::new(0x1878).unwrap()),
-                &x1878_payload,
-            )
-            .context("1878")?,
-            // TXFrame::new(0x1879, [0u8; 8]),
-        ])
+        Ok(())
     }
-    fn tx_data_frames<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
-        if !(1..=100u16).contains(&self.capacity) {
-            return Err(anyhow!("Data - fault condition - soc = {}", self.capacity));
-        }
-        if !self.is_valid() {
-            return Err(anyhow!("Data valid flag is false"));
-        }
-
+    fn normal(&mut self) -> Result<()> {
+        // Rolling alternate bytes - matches known protocol
         match (self.byte1, self.byte2) {
             (0x1d, 0x10) => {
                 (self.byte1, self.byte2) = (0x1d, 0x20);
@@ -287,60 +261,63 @@ impl SolaxBms {
             }
             _ => {}
         }
-
-        self.last_success = Some(Instant::now());
-
-        Ok(vec![
+        Ok(())
+    }
+    fn tx_data_dbc_frames<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
+        let output = vec![
             T::new(
                 Id::Extended(ExtendedId::new(0x1877).unwrap()),
                 &self.x1877(),
             )
             .context("x1877")?,
             T::new(
-                Id::Extended(ExtendedId::new(0x1872).unwrap()),
-                &self.x1872(),
+                Id::Extended(ExtendedId::new(BmsLimits::MESSAGE_ID).unwrap()),
+                &self.x1872()?,
             )
             .context("x1872")?,
             T::new(
-                Id::Extended(ExtendedId::new(0x1873).unwrap()),
-                &self.x1873(),
+                Id::Extended(ExtendedId::new(BmsPackData::MESSAGE_ID).unwrap()),
+                &self.x1873()?,
             )
             .context("x1873")?,
             T::new(
-                Id::Extended(ExtendedId::new(0x1874).unwrap()),
-                &self.x1874(),
+                Id::Extended(ExtendedId::new(BmsCellData::MESSAGE_ID).unwrap()),
+                &self.x1874()?,
             )
             .context("x1874")?,
             T::new(
-                Id::Extended(ExtendedId::new(0x1875).unwrap()),
-                &self.x1875(),
+                Id::Extended(ExtendedId::new(BmsStatus::MESSAGE_ID).unwrap()),
+                &self.x1875()?,
             )
             .context("x1875")?,
             T::new(
-                Id::Extended(ExtendedId::new(0x1876).unwrap()),
-                &self.x1876(),
+                Id::Extended(ExtendedId::new(BmsPackTemps::MESSAGE_ID).unwrap()),
+                &self.x1876()?,
             )
             .context("x1876")?,
             T::new(
-                Id::Extended(ExtendedId::new(0x1878).unwrap()),
-                &self.x1878(),
+                Id::Extended(ExtendedId::new(BmsPackStats::MESSAGE_ID).unwrap()),
+                &self.x1878()?,
             )
-            .context("1878")?,
+            .context("x1878")?,
             // self.x1879(),
-        ])
+        ];
+        self.last_success = Some(Instant::now());
+        Ok(output)
     }
 
-    fn x1872(self) -> [u8; 8] {
+    fn x1872(self) -> Result<[u8; 8]> {
         // - BMS_Limits
-        let mut tx_payload: [u8; 8] = [0; 8];
-        [tx_payload[0], tx_payload[1]] = self.slave_voltage_max.to_le_bytes();
-        [tx_payload[2], tx_payload[3]] = self.slave_voltage_min.to_le_bytes();
-        [tx_payload[4], tx_payload[5]] = self.charge_max.to_le_bytes();
-        [tx_payload[6], tx_payload[7]] = self.discharge_max.to_le_bytes();
-
-        // verify with
+        let tx_payload: [u8; 8] = BmsLimits::new(
+            self.slave_voltage_max.into(),
+            self.slave_voltage_min.into(),
+            self.charge_max.into(),
+            self.discharge_max.into(),
+        )?
+        .raw()
+        .try_into()?;
         self.x1872_decode(&tx_payload);
-        tx_payload
+        Ok(tx_payload)
     }
 
     fn x1872_decode(self, bytes: &[u8]) {
@@ -354,16 +331,18 @@ impl SolaxBms {
         );
     }
 
-    fn x1873(self) -> [u8; 8] {
+    fn x1873(self) -> Result<[u8; 8]> {
         //BMS_PackData
-        // let x1873 = vec![0x2A, 0x09, 0x00, 0x00, 0x0E, 0x00, 0xDC, 0x00];
-        let mut tx_payload: [u8; 8] = [0; 8];
-        [tx_payload[0], tx_payload[1]] = self.voltage.to_le_bytes();
-        [tx_payload[2], tx_payload[3]] = self.current.to_le_bytes();
-        [tx_payload[4], tx_payload[5]] = self.capacity.to_le_bytes();
-        [tx_payload[6], tx_payload[7]] = self.kwh.to_le_bytes();
+        let tx_payload: [u8; 8] = BmsPackData::new(
+            self.voltage.into(),
+            self.current.into(),
+            self.capacity,
+            self.kwh.into(),
+        )?
+        .raw()
+        .try_into()?;
         self.x1873_decode(&tx_payload);
-        tx_payload
+        Ok(tx_payload)
     }
 
     fn x1873_decode(self, bytes: &[u8]) {
@@ -377,16 +356,18 @@ impl SolaxBms {
         );
     }
 
-    fn x1874(self) -> [u8; 8] //Cell data
+    fn x1874(self) -> Result<[u8; 8]> //Cell data
     {
-        let mut tx_payload: [u8; 8] = [0; 8];
-
-        [tx_payload[0], tx_payload[1]] = self.cell_temp_max.to_le_bytes();
-        [tx_payload[2], tx_payload[3]] = self.cell_temp_min.to_le_bytes();
-        [tx_payload[4], tx_payload[5]] = self.cell_voltage_max.to_le_bytes();
-        [tx_payload[6], tx_payload[7]] = self.cell_voltage_min.to_le_bytes();
+        let tx_payload: [u8; 8] = BmsCellData::new(
+            self.cell_temp_min.into(),
+            self.cell_temp_max.into(),
+            self.cell_voltage_min.into(),
+            self.cell_voltage_max.into(),
+        )?
+        .raw()
+        .try_into()?;
         self.x1874_decode(&tx_payload);
-        tx_payload
+        Ok(tx_payload)
     }
 
     fn x1874_decode(self, bytes: &[u8]) //Cell data
@@ -401,23 +382,19 @@ impl SolaxBms {
         )
     }
 
-    fn x1875(self) -> [u8; 8] {
+    fn x1875(self) -> Result<[u8; 8]> {
         //BMS_PackData
-
-        let mut tx_payload: [u8; 8] = [0; 8];
-        [tx_payload[0], tx_payload[1]] = self.int_temp.to_le_bytes();
-        tx_payload[2] = 0x1; // quanity of batteries https://secondlifestorage.com/index.php?threads/three-phase-hv-hybrid-inverter-solax-x3-hybrid-8-0-solax-triple-power-t58-hv-battery.10747/post-84312
-                             // tx_payload[4] = 1; //self.contactor as u8;
-        tx_payload[4] = self.contactor as u8;
-
+        let tx_payload: [u8; 8] = BmsStatus::new(self.contactor, self.int_temp.into())?
+            .raw()
+            .try_into()?;
         self.x1875_decode(&tx_payload);
-        tx_payload
+        Ok(tx_payload)
     }
 
     fn x1875_decode(self, bytes: &[u8]) // BMS status
     {
         let ints = as_u16le(bytes);
-        println!(
+        info!(
             "BMS status - Int temp {}ºC Unknown {} Contactor {}",
             ints[0] as f32 * 0.1,
             bytes[3] != 1,
@@ -425,25 +402,29 @@ impl SolaxBms {
         );
     }
 
-    fn x1876(self) -> [u8; 8] // BMS_PackStats
+    fn x1876(self) -> Result<[u8; 8]> // BMS_PackStats
     {
-        let mut tx_payload: [u8; 8] = [0; 8];
-        tx_payload[0] = 1;
-        [tx_payload[2], tx_payload[3]] = self.v_max.to_le_bytes();
-        [tx_payload[6], tx_payload[7]] = self.v_min.to_le_bytes();
+        let tx_payload: [u8; 8] = BmsPackTemps::new(
+            self.cell_temp_max.into(),
+            self.cell_temp_min.into(),
+            0.0,
+            0.0,
+        )?
+        .raw()
+        .try_into()?;
         self.x1876_decode(&tx_payload);
-        tx_payload
+        Ok(tx_payload)
     }
-    fn x1876_decode(self, bytes: &[u8]) // BMS status
+
+    fn x1876_decode(self, bytes: &[u8]) // BMS temps
     {
-        // let x1875 = vec![0x53, 0x01, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00];
         let ints = as_u16le(bytes);
-        println!(
-            "Pack status - {}? {}mV {}? {}mV",
-            ints[0] as f32 * 1.0,
-            ints[1] as f32 * 1.0,
-            ints[2] as f32 * 1.0,
-            ints[3] as f32 * 1.0,
+        info!(
+            "Pack Temps - {}ºC {}ºC {}ºC {}ºC",
+            ints[0] as f32 * 0.01,
+            ints[1] as f32 * 0.01,
+            ints[2] as f32 * 0.01,
+            ints[3] as f32 * 0.01,
         );
     }
 
@@ -457,12 +438,18 @@ impl SolaxBms {
         tx_payload
     }
 
-    fn x1878(self) -> [u8; 8] {
-        //Fixed data
-        let mut tx_payload: [u8; 8] = [0x0, 0x0, 0x0, 0x0, 0x79, 0x43, 0x0, 0x2];
-        [tx_payload[0], tx_payload[1]] = self.pack_voltage_max.to_le_bytes();
-        [tx_payload[4], tx_payload[5], tx_payload[6], tx_payload[7]] = self.wh_total.to_le_bytes();
-        tx_payload
+    fn x1878(self) -> Result<[u8; 8]> {
+        let tx_payload: [u8; 8] = BmsPackStats::new(self.pack_voltage_max.into(), self.wh_total)?
+            .raw()
+            .try_into()?;
+        self.x1878_decode(&tx_payload);
+        Ok(tx_payload)
+    }
+    fn x1878_decode(self, bytes: &[u8]) {
+        // let ints = as_u16le(bytes);
+        let v = u16::from_le_bytes([bytes[0], bytes[1]]);
+        let wh = f32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
+        info!("Pack Master - Maximum pack volts threshold {v}V WattHours {wh}wH",);
     }
 
     /*

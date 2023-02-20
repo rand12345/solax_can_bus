@@ -25,6 +25,8 @@ pub enum Messages {
     BmsCellData(BmsCellData),
     /// BMS_Status
     BmsStatus(BmsStatus),
+    /// BMS_PackTemps
+    BmsPackTemps(BmsPackTemps),
     /// BMS_PackStats
     BmsPackStats(BmsPackStats),
 }
@@ -40,6 +42,7 @@ impl Messages {
             6259 => Messages::BmsPackData(BmsPackData::try_from(payload)?),
             6260 => Messages::BmsCellData(BmsCellData::try_from(payload)?),
             6261 => Messages::BmsStatus(BmsStatus::try_from(payload)?),
+            6262 => Messages::BmsPackTemps(BmsPackTemps::try_from(payload)?),
             6264 => Messages::BmsPackStats(BmsPackStats::try_from(payload)?),
             n => return Err(CanError::UnknownMessageId(n)),
         };
@@ -933,6 +936,256 @@ impl<'a> Arbitrary<'a> for BmsStatus {
         let contactor = u.int_in_range(0..=1)? == 1;
         let pack_temperature = u.float_in_range(-40_f32..=60_f32)?;
         BmsStatus::new(contactor,pack_temperature).map_err(|_| arbitrary::Error::IncorrectFormat)
+    }
+}
+
+/// BMS_PackTemps
+///
+/// - ID: 6262 (0x1876)
+/// - Size: 8 bytes
+/// - Transmitter: Solax_inverter
+#[derive(Clone, Copy)]
+pub struct BmsPackTemps {
+    raw: [u8; 8],
+}
+
+impl BmsPackTemps {
+    pub const MESSAGE_ID: u32 = 6262;
+    
+    pub const TEMP1_MIN: f32 = -40_f32;
+    pub const TEMP1_MAX: f32 = 60_f32;
+    pub const TEMP2_MIN: f32 = -40_f32;
+    pub const TEMP2_MAX: f32 = 60_f32;
+    pub const TEMP3_MIN: f32 = -40_f32;
+    pub const TEMP3_MAX: f32 = 60_f32;
+    pub const TEMP4_MIN: f32 = -40_f32;
+    pub const TEMP4_MAX: f32 = 60_f32;
+    
+    /// Construct new BMS_PackTemps from values
+    pub fn new(temp1: f32, temp2: f32, temp3: f32, temp4: f32) -> Result<Self, CanError> {
+        let mut res = Self { raw: [0u8; 8] };
+        res.set_temp1(temp1)?;
+        res.set_temp2(temp2)?;
+        res.set_temp3(temp3)?;
+        res.set_temp4(temp4)?;
+        Ok(res)
+    }
+    
+    /// Access message payload raw value
+    pub fn raw(&self) -> &[u8] {
+        &self.raw
+    }
+    
+    /// temp1
+    ///
+    /// - Min: -40
+    /// - Max: 60
+    /// - Unit: "C"
+    /// - Receivers: Solax_inverter
+    #[inline(always)]
+    pub fn temp1(&self) -> f32 {
+        self.temp1_raw()
+    }
+    
+    /// Get raw value of temp1
+    ///
+    /// - Start bit: 0
+    /// - Signal size: 16 bits
+    /// - Factor: 0.01
+    /// - Offset: 0
+    /// - Byte order: LittleEndian
+    /// - Value type: Unsigned
+    #[inline(always)]
+    pub fn temp1_raw(&self) -> f32 {
+        let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
+        
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        (signal as f32) * factor + offset
+    }
+    
+    /// Set value of temp1
+    #[inline(always)]
+    pub fn set_temp1(&mut self, value: f32) -> Result<(), CanError> {
+        #[cfg(feature = "range_checked")]
+        if value < -40_f32 || 60_f32 < value {
+            return Err(CanError::ParameterOutOfRange { message_id: 6262 });
+        }
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        let value = ((value - offset) / factor) as u16;
+        
+        self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
+        Ok(())
+    }
+    
+    /// temp2
+    ///
+    /// - Min: -40
+    /// - Max: 60
+    /// - Unit: "C"
+    /// - Receivers: Solax_inverter
+    #[inline(always)]
+    pub fn temp2(&self) -> f32 {
+        self.temp2_raw()
+    }
+    
+    /// Get raw value of temp2
+    ///
+    /// - Start bit: 16
+    /// - Signal size: 16 bits
+    /// - Factor: 0.01
+    /// - Offset: 0
+    /// - Byte order: LittleEndian
+    /// - Value type: Unsigned
+    #[inline(always)]
+    pub fn temp2_raw(&self) -> f32 {
+        let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
+        
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        (signal as f32) * factor + offset
+    }
+    
+    /// Set value of temp2
+    #[inline(always)]
+    pub fn set_temp2(&mut self, value: f32) -> Result<(), CanError> {
+        #[cfg(feature = "range_checked")]
+        if value < -40_f32 || 60_f32 < value {
+            return Err(CanError::ParameterOutOfRange { message_id: 6262 });
+        }
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        let value = ((value - offset) / factor) as u16;
+        
+        self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
+        Ok(())
+    }
+    
+    /// temp3
+    ///
+    /// - Min: -40
+    /// - Max: 60
+    /// - Unit: "C"
+    /// - Receivers: Solax_inverter
+    #[inline(always)]
+    pub fn temp3(&self) -> f32 {
+        self.temp3_raw()
+    }
+    
+    /// Get raw value of temp3
+    ///
+    /// - Start bit: 32
+    /// - Signal size: 16 bits
+    /// - Factor: 0.01
+    /// - Offset: 0
+    /// - Byte order: LittleEndian
+    /// - Value type: Unsigned
+    #[inline(always)]
+    pub fn temp3_raw(&self) -> f32 {
+        let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
+        
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        (signal as f32) * factor + offset
+    }
+    
+    /// Set value of temp3
+    #[inline(always)]
+    pub fn set_temp3(&mut self, value: f32) -> Result<(), CanError> {
+        #[cfg(feature = "range_checked")]
+        if value < -40_f32 || 60_f32 < value {
+            return Err(CanError::ParameterOutOfRange { message_id: 6262 });
+        }
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        let value = ((value - offset) / factor) as u16;
+        
+        self.raw.view_bits_mut::<Lsb0>()[32..48].store_le(value);
+        Ok(())
+    }
+    
+    /// temp4
+    ///
+    /// - Min: -40
+    /// - Max: 60
+    /// - Unit: "C"
+    /// - Receivers: Solax_inverter
+    #[inline(always)]
+    pub fn temp4(&self) -> f32 {
+        self.temp4_raw()
+    }
+    
+    /// Get raw value of temp4
+    ///
+    /// - Start bit: 48
+    /// - Signal size: 16 bits
+    /// - Factor: 0.01
+    /// - Offset: 0
+    /// - Byte order: LittleEndian
+    /// - Value type: Unsigned
+    #[inline(always)]
+    pub fn temp4_raw(&self) -> f32 {
+        let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
+        
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        (signal as f32) * factor + offset
+    }
+    
+    /// Set value of temp4
+    #[inline(always)]
+    pub fn set_temp4(&mut self, value: f32) -> Result<(), CanError> {
+        #[cfg(feature = "range_checked")]
+        if value < -40_f32 || 60_f32 < value {
+            return Err(CanError::ParameterOutOfRange { message_id: 6262 });
+        }
+        let factor = 0.01_f32;
+        let offset = 0_f32;
+        let value = ((value - offset) / factor) as u16;
+        
+        self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
+        Ok(())
+    }
+    
+}
+
+impl core::convert::TryFrom<&[u8]> for BmsPackTemps {
+    type Error = CanError;
+    
+    #[inline(always)]
+    fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
+        let mut raw = [0u8; 8];
+        raw.copy_from_slice(&payload[..8]);
+        Ok(Self { raw })
+    }
+}
+
+#[cfg(feature = "debug")]
+impl core::fmt::Debug for BmsPackTemps {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if f.alternate() {
+            f.debug_struct("BmsPackTemps")
+                .field("temp1", &self.temp1())
+                .field("temp2", &self.temp2())
+                .field("temp3", &self.temp3())
+                .field("temp4", &self.temp4())
+            .finish()
+        } else {
+            f.debug_tuple("BmsPackTemps").field(&self.raw).finish()
+        }
+    }
+}
+
+#[cfg(feature = "arb")]
+impl<'a> Arbitrary<'a> for BmsPackTemps {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
+        let temp1 = u.float_in_range(-40_f32..=60_f32)?;
+        let temp2 = u.float_in_range(-40_f32..=60_f32)?;
+        let temp3 = u.float_in_range(-40_f32..=60_f32)?;
+        let temp4 = u.float_in_range(-40_f32..=60_f32)?;
+        BmsPackTemps::new(temp1,temp2,temp3,temp4).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
