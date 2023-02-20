@@ -65,7 +65,7 @@ impl BmsLimits {
     
     pub const SLAVE_VOLTAGE_MAX_MIN: f32 = 380_f32;
     pub const SLAVE_VOLTAGE_MAX_MAX: f32 = 400_f32;
-    pub const SLAVE_VOLTAGE_MIN_MIN: f32 = 280_f32;
+    pub const SLAVE_VOLTAGE_MIN_MIN: f32 = 290_f32;
     pub const SLAVE_VOLTAGE_MIN_MAX: f32 = 330_f32;
     pub const MAX_CHARGE_RATE_MIN: f32 = 0_f32;
     pub const MAX_CHARGE_RATE_MAX: f32 = 253_f32;
@@ -132,7 +132,7 @@ impl BmsLimits {
     
     /// slave_voltage_min
     ///
-    /// - Min: 280
+    /// - Min: 290
     /// - Max: 330
     /// - Unit: "V"
     /// - Receivers: Solax_inverter
@@ -162,7 +162,7 @@ impl BmsLimits {
     #[inline(always)]
     pub fn set_slave_voltage_min(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < 280_f32 || 330_f32 < value {
+        if value < 290_f32 || 330_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6258 });
         }
         let factor = 0.1_f32;
@@ -293,7 +293,7 @@ impl core::fmt::Debug for BmsLimits {
 impl<'a> Arbitrary<'a> for BmsLimits {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
         let slave_voltage_max = u.float_in_range(380_f32..=400_f32)?;
-        let slave_voltage_min = u.float_in_range(280_f32..=330_f32)?;
+        let slave_voltage_min = u.float_in_range(290_f32..=330_f32)?;
         let max_charge_rate = u.float_in_range(0_f32..=253_f32)?;
         let max_discharge_rate = u.float_in_range(0_f32..=35_f32)?;
         BmsLimits::new(slave_voltage_max,slave_voltage_min,max_charge_rate,max_discharge_rate).map_err(|_| arbitrary::Error::IncorrectFormat)
@@ -313,7 +313,7 @@ pub struct BmsPackData {
 impl BmsPackData {
     pub const MESSAGE_ID: u32 = 6259;
     
-    pub const MASTER_VOLTAGE_MIN: f32 = 300_f32;
+    pub const MASTER_VOLTAGE_MIN: f32 = 290_f32;
     pub const MASTER_VOLTAGE_MAX: f32 = 400_f32;
     pub const CURRENT_SENSOR_MIN: f32 = -40_f32;
     pub const CURRENT_SENSOR_MAX: f32 = 40_f32;
@@ -339,7 +339,7 @@ impl BmsPackData {
     
     /// master_voltage
     ///
-    /// - Min: 300
+    /// - Min: 290
     /// - Max: 400
     /// - Unit: "V"
     /// - Receivers: Solax_inverter
@@ -369,7 +369,7 @@ impl BmsPackData {
     #[inline(always)]
     pub fn set_master_voltage(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < 300_f32 || 400_f32 < value {
+        if value < 290_f32 || 400_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6259 });
         }
         let factor = 0.1_f32;
@@ -536,7 +536,7 @@ impl core::fmt::Debug for BmsPackData {
 #[cfg(feature = "arb")]
 impl<'a> Arbitrary<'a> for BmsPackData {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
-        let master_voltage = u.float_in_range(300_f32..=400_f32)?;
+        let master_voltage = u.float_in_range(290_f32..=400_f32)?;
         let current_sensor = u.float_in_range(-40_f32..=40_f32)?;
         let soc = u.int_in_range(0..=100)?;
         let kwh_remaining = u.float_in_range(0_f32..=60_f32)?;
@@ -1202,7 +1202,7 @@ pub struct BmsPackStats {
 impl BmsPackStats {
     pub const MESSAGE_ID: u32 = 6264;
     
-    pub const PACK_VOLTAGE_MIN: f32 = 300_f32;
+    pub const PACK_VOLTAGE_MIN: f32 = 290_f32;
     pub const PACK_VOLTAGE_MAX: f32 = 400_f32;
     pub const TOTAL_WATT_HRS_MIN: u32 = 0_u32;
     pub const TOTAL_WATT_HRS_MAX: u32 = 429497000_u32;
@@ -1222,7 +1222,7 @@ impl BmsPackStats {
     
     /// pack_voltage
     ///
-    /// - Min: 300
+    /// - Min: 290
     /// - Max: 400
     /// - Unit: "V"
     /// - Receivers: Solax_inverter
@@ -1252,7 +1252,7 @@ impl BmsPackStats {
     #[inline(always)]
     pub fn set_pack_voltage(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
-        if value < 300_f32 || 400_f32 < value {
+        if value < 290_f32 || 400_f32 < value {
             return Err(CanError::ParameterOutOfRange { message_id: 6264 });
         }
         let factor = 0.1_f32;
@@ -1331,7 +1331,7 @@ impl core::fmt::Debug for BmsPackStats {
 #[cfg(feature = "arb")]
 impl<'a> Arbitrary<'a> for BmsPackStats {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
-        let pack_voltage = u.float_in_range(300_f32..=400_f32)?;
+        let pack_voltage = u.float_in_range(290_f32..=400_f32)?;
         let total_watt_hrs = u.int_in_range(0..=429497000)?;
         BmsPackStats::new(pack_voltage,total_watt_hrs).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
