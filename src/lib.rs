@@ -40,24 +40,24 @@ pub enum SolaxStatus {
 pub struct SolaxBms {
     // no conversions out of this struct
     pub status: SolaxStatus,
-    pub slave_voltage_max: u16, // 1000 = 100.0v
-    pub slave_voltage_min: u16, // 800 = 80.0v
-    pub charge_max: u16,        // 201 = 20A
-    pub discharge_max: u16,     // 350 = 35A
-    pub voltage: u16,           // 1130 = 113.0V
-    pub current: i16,           // -2 = -0.2A
+    pub slave_voltage_max: f32, // 1000 = 100.0v
+    pub slave_voltage_min: f32, // 800 = 80.0v
+    pub charge_max: f32,        // 201 = 20A
+    pub discharge_max: f32,     // 350 = 35A
+    pub voltage: f32,           // 1130 = 113.0V
+    pub current: f32,           // -2 = -0.2A
     pub capacity: u16,          // %
-    pub kwh: u16,               // 419 = 41.9 Kwh (* 0.1)
-    pub cell_temp_min: i16,     // 18 = 1.8ºC signed
-    pub cell_temp_max: i16,     // 21 = 2.1ºC
-    pub cell_voltage_min: u16,  // 40 = 4.0V
-    pub cell_voltage_max: u16,  // 41 = 4.1V
-    pub pack_voltage_max: u16,  // 4100 = 410.0V
+    pub kwh: f32,               // 419 = 41.9 Kwh (* 0.1)
+    pub cell_temp_min: f32,     // 18 = 1.8ºC signed
+    pub cell_temp_max: f32,     // 21 = 2.1ºC
+    pub cell_voltage_min: f32,  // 40 = 4.0V
+    pub cell_voltage_max: f32,  // 41 = 4.1V
+    pub pack_voltage_max: f32,  // 4100 = 410.0V
     pub wh_total: u32,          // watt hours total in wh
     pub contactor: bool,
-    pub int_temp: i16, // 20 = 20ºC
-    pub v_max: u16,    // 4501 = 45.01º
-    pub v_min: u16,    // 1501 = 15.01º
+    pub int_temp: f32, // 20 = 20ºC
+    pub v_max: f32,    // 4501 = 45.01º
+    pub v_min: f32,    // 1501 = 15.01º
     pub id: u8,
     pub byte1: u8,
     pub byte2: u8,
@@ -309,10 +309,10 @@ impl SolaxBms {
     fn x1872(self) -> Result<[u8; 8]> {
         // - BMS_Limits
         let tx_payload: [u8; 8] = BmsLimits::new(
-            self.slave_voltage_max.into(),
-            self.slave_voltage_min.into(),
-            self.charge_max.into(),
-            self.discharge_max.into(),
+            self.slave_voltage_max,
+            self.slave_voltage_min,
+            self.charge_max,
+            self.discharge_max,
         )?
         .raw()
         .try_into()?;
@@ -333,14 +333,10 @@ impl SolaxBms {
 
     fn x1873(self) -> Result<[u8; 8]> {
         //BMS_PackData
-        let tx_payload: [u8; 8] = BmsPackData::new(
-            self.voltage.into(),
-            self.current.into(),
-            self.capacity,
-            self.kwh.into(),
-        )?
-        .raw()
-        .try_into()?;
+        let tx_payload: [u8; 8] =
+            BmsPackData::new(self.voltage, self.current, self.capacity, self.kwh)?
+                .raw()
+                .try_into()?;
         self.x1873_decode(&tx_payload);
         Ok(tx_payload)
     }
@@ -359,10 +355,10 @@ impl SolaxBms {
     fn x1874(self) -> Result<[u8; 8]> //Cell data
     {
         let tx_payload: [u8; 8] = BmsCellData::new(
-            self.cell_temp_min.into(),
-            self.cell_temp_max.into(),
-            self.cell_voltage_min.into(),
-            self.cell_voltage_max.into(),
+            self.cell_temp_min,
+            self.cell_temp_max,
+            self.cell_voltage_min,
+            self.cell_voltage_max,
         )?
         .raw()
         .try_into()?;
@@ -384,7 +380,7 @@ impl SolaxBms {
 
     fn x1875(self) -> Result<[u8; 8]> {
         //BMS_PackData
-        let tx_payload: [u8; 8] = BmsStatus::new(self.contactor, self.int_temp.into())?
+        let tx_payload: [u8; 8] = BmsStatus::new(self.contactor, self.int_temp)?
             .raw()
             .try_into()?;
         self.x1875_decode(&tx_payload);
@@ -404,14 +400,10 @@ impl SolaxBms {
 
     fn x1876(self) -> Result<[u8; 8]> // BMS_PackStats
     {
-        let tx_payload: [u8; 8] = BmsPackTemps::new(
-            self.cell_temp_max.into(),
-            self.cell_temp_min.into(),
-            0.0,
-            0.0,
-        )?
-        .raw()
-        .try_into()?;
+        let tx_payload: [u8; 8] =
+            BmsPackTemps::new(self.cell_temp_max, self.cell_temp_min, 0.0, 0.0)?
+                .raw()
+                .try_into()?;
         self.x1876_decode(&tx_payload);
         Ok(tx_payload)
     }
@@ -439,7 +431,7 @@ impl SolaxBms {
     }
 
     fn x1878(self) -> Result<[u8; 8]> {
-        let tx_payload: [u8; 8] = BmsPackStats::new(self.pack_voltage_max.into(), self.wh_total)?
+        let tx_payload: [u8; 8] = BmsPackStats::new(self.pack_voltage_max, self.wh_total)?
             .raw()
             .try_into()?;
         self.x1878_decode(&tx_payload);
