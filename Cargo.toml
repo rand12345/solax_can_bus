@@ -6,7 +6,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
-default = ["serde_support", "std"]
+default = ["serde_support", "std", "range_checked", "debug"]
+range_checked = []
+debug = []
 serde_support = ["dep:serde"]
 no_std = ["dep:heapless"]
 std = []
@@ -15,5 +17,10 @@ std = []
 embedded-hal = "0.2.7"
 anyhow = "1"
 log = "0.4.17"
-heapless = {version = "0.7", optional = true}
+heapless = {version = "0.7.16", optional = true}
 serde = { version = "1.0.152", features=["derive"], default-features = false, optional = true }
+bitvec = { version = "1.0", default-features = false }
+arbitrary = { version = "1.0", optional = true } # Enable with `arb` feature
+
+[build-dependencies]
+dbc-codegen = "0.2.0"

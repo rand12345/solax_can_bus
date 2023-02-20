@@ -3,6 +3,7 @@ use embedded_hal::can::{ExtendedId, Id};
 // use heapless::Vec; Need to move to no_std
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
+mod messages; // to be implemented in later commit
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 const REG02: &[u8] = &[0x2, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
