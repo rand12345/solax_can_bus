@@ -350,7 +350,7 @@ impl SolaxBms {
             ints[0] as f32 * 0.1,
             (ints[1] as i16) as f32 / 10.0,
             ints[2],
-            ints[3] as f32 * 0.01,
+            ints[3] as f32 * 0.1,
         );
     }
 

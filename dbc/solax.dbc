@@ -56,10 +56,9 @@ BO_ 6261 BMS_Status: 8 Solax_inverter
    SG_ pack_temperature : 0|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
 
 BO_ 6262 BMS_PackTemps: 8 Solax_inverter
-   SG_ temp1 : 0|16@1+ (0.01,0) [-40|60] "C" Solax_inverter
-   SG_ temp2 : 16|16@1+ (0.01,0) [-40|60] "C" Solax_inverter
-   SG_ temp3 : 32|16@1+ (0.01,0) [-40|60] "C" Solax_inverter
-   SG_ temp4 : 48|16@1+ (0.01,0) [-40|60] "C" Solax_inverter
+   SG_ bit : 3|1@1- (1,0) [0|1] "" Solax_inverter
+   SG_ temp1 : 16|16@1+ (0.01,0) [-40|60] "C" Solax_inverter
+   SG_ temp2 : 48|16@1+ (0.01,0) [-40|60] "C" Solax_inverter
 
 BO_ 6264 BMS_PackStats: 8 Solax_inverter
    SG_ pack_voltage : 0|16@1+ (0.1,0) [290|400] "V" Solax_inverter
