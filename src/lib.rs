@@ -323,7 +323,7 @@ impl SolaxBms {
     fn x1872_decode(self, bytes: &[u8]) {
         log::debug!("0x1872:{bytes:02x?}");
         let ints = as_u16le(bytes);
-        println!(
+        info!(
             "Pack limits - Max {}V Min {}V Charge {}A Discharge {}A",
             ints[0] as f32 * 0.1,
             ints[1] as f32 * 0.1,
@@ -345,7 +345,7 @@ impl SolaxBms {
     fn x1873_decode(self, bytes: &[u8]) {
         log::debug!("0x1873:{bytes:02x?}");
         let ints = as_u16le(bytes);
-        println!(
+        info!(
             "Pack Now - {}V  {}A  SoC:{}%  {}kWh",
             ints[0] as f32 * 0.1,
             (ints[1] as i16) as f32 / 10.0,
@@ -372,7 +372,7 @@ impl SolaxBms {
     {
         log::debug!("0x1874:{bytes:02x?}");
         let ints = as_u16le(bytes);
-        println!(
+        info!(
             "Pack limts - Max {}º Min {}º Max {}V Min {}V ",
             ints[0] as f32 * 0.1,
             ints[1] as f32 * 0.1,
@@ -445,7 +445,7 @@ impl SolaxBms {
     fn x1878_decode(self, bytes: &[u8]) {
         log::debug!("0x1878:{bytes:02x?}");
         let v = u16::from_le_bytes([bytes[0], bytes[1]]).saturating_div(10);
-        let wh = f32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
+        let wh = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
         info!("Pack Master - Maximum pack volts threshold {v}V WattHours {wh}wH",);
     }
 
@@ -456,7 +456,7 @@ impl SolaxBms {
     let Data_0 = u16::from_le_bytes([x1871[2],x1871[3]]);
     let Data_1 = u16::from_le_bytes([x1871[4],x1871[5]]);
     let Data_2 = u16::from_le_bytes([x1871[6],x1871[7]]);
-    println!("Packet_Type {Packet_Type} Data_0 {Data_0} Data_1 {Data_1} Data_2 {Data_2} ");
+    info!("Packet_Type {Packet_Type} Data_0 {Data_0} Data_1 {Data_1} Data_2 {Data_2} ");
     */
 }
 
