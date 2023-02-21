@@ -1,4 +1,4 @@
-VERSION "0.1"
+VERSION ""
 
 
 NS_ :
@@ -31,37 +31,43 @@ NS_ :
     BU_BO_REL_
     SG_MUL_VAL_
 
-BS_:
-BU_: Solax_inverter
-BO_ 6258 BMS_Limits: 8 Solax_inverter
+BS_: 
+BU_: Solax_inverter 
+BO_ 2147489906 BMS_Limits: 8 Solax_inverter
    SG_ slave_voltage_max : 0|16@1+ (0.1,0) [380|400] "V" Solax_inverter
    SG_ slave_voltage_min : 16|16@1+ (0.1,0) [290|330] "V" Solax_inverter
    SG_ max_charge_rate : 32|16@1+ (0.1,0) [0|253] "A" Solax_inverter
    SG_ max_discharge_rate : 48|16@1+ (0.1,0) [0|35] "A" Solax_inverter
 
-BO_ 6259 BMS_PackData: 8 Solax_inverter
+BO_ 2147489907 BMS_PackData: 8 Solax_inverter
    SG_ master_voltage : 0|16@1+ (0.1,0) [290|400] "V" Solax_inverter
-   SG_ current_sensor : 16|16@1+ (0.1,0) [-40|40] "V" Solax_inverter
+   SG_ current_sensor : 16|16@1- (0.1,0) [-40|40] "A" Vector__XXX
    SG_ soc : 32|16@1+ (1,0) [0|100] "%" Solax_inverter
    SG_ kwh_remaining : 48|16@1+ (0.01,0) [0|100] "kWh" Solax_inverter
 
-BO_ 6260 BMS_CellData: 8 Solax_inverter
-   SG_ cell_volts_low : 48|16@1+ (100,0) [2900|4200] "V" Solax_inverter
-   SG_ cell_volts_high : 32|16@1+ (100,0) [2900|4200] "V" Solax_inverter
-   SG_ cell_temperature_low : 16|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
-   SG_ cell_temperature_high : 0|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
+BO_ 2147489908 BMS_CellData: 8 Solax_inverter
+   SG_ cell_volts_low : 48|16@1+ (100,0) [2900|4200] "mV" Solax_inverter
+   SG_ cell_volts_high : 32|16@1+ (100,0) [2900|4200] "mV" Solax_inverter
+   SG_ cell_temperature_low : 16|16@1- (0.1,0) [-40|60] "C" Solax_inverter
+   SG_ cell_temperature_high : 0|16@1- (0.1,0) [-40|60] "C" Solax_inverter
 
-BO_ 6261 BMS_Status: 8 Solax_inverter
-   SG_ bit : 16|1@1- (1,0) [0|1] "" Solax_inverter
-   SG_ contactor : 32|1@1- (1,0) [0|1] "" Solax_inverter
-   SG_ pack_temperature : 0|16@1+ (0.1,0) [-40|60] "C" Solax_inverter
+BO_ 2147489909 BMS_Status: 8 Solax_inverter
+   SG_ bit : 16|1@1+ (1,0) [0|1] "" Solax_inverter
+   SG_ contactor : 32|1@1+ (1,0) [0|1] "" Solax_inverter
+   SG_ pack_temperature : 0|16@1- (0.1,0) [-40|60] "C" Solax_inverter
 
-BO_ 6262 BMS_PackTemps: 8 Solax_inverter
-   SG_ bit : 0|1@1- (1,0) [0|1] "" Solax_inverter
+BO_ 2147489910 BMS_PackTemps: 8 Solax_inverter
+   SG_ bit : 0|1@1+ (1,0) [0|1] "" Solax_inverter
    SG_ cell_millivolts_high : 16|16@1+ (1,0) [2900|4200] "mV" Solax_inverter
-   SG_ cell_millivolts_low : 48|16@1+ (1,0)  [2900|4200] "mV" Solax_inverter
+   SG_ cell_millivolts_low : 48|16@1+ (1,0) [2900|4200] "mV" Solax_inverter
 
-BO_ 6264 BMS_PackStats: 8 Solax_inverter
+BO_ 2147489912 BMS_PackStats: 8 Solax_inverter
    SG_ pack_voltage : 0|16@1+ (0.1,0) [290|400] "V" Solax_inverter
-   SG_ total_watt_hrs : 32|32@1+ (1,0) [0|429497000] "Wh" Solax_inverter
-   
+   SG_ total_watt_hrs : 32|32@1+ (1,0) [0|4.29497e+08] "Wh" Solax_inverter
+
+BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
+BA_DEF_ BO_ "GenMsgForegroundColor" STRING ;
+BA_DEF_ BO_ "labelfilters" INT 0 0;
+BA_DEF_DEF_ "GenMsgBackgroundColor" "#1e1e1e";
+BA_DEF_DEF_ "GenMsgForegroundColor" "#ffffff";
+BA_DEF_DEF_ "labelfilters" 1;
