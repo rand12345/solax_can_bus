@@ -1,21 +1,17 @@
 // Generated code!
 #![allow(unused_comparisons, unreachable_patterns)]
 #![allow(clippy::let_and_return, clippy::eq_op)]
-#![allow(
-    clippy::excessive_precision,
-    clippy::manual_range_contains,
-    clippy::absurd_extreme_comparisons
-)]
+#![allow(clippy::excessive_precision, clippy::manual_range_contains, clippy::absurd_extreme_comparisons)]
 #![deny(clippy::integer_arithmetic)]
 
 //! Message definitions from file `"solax.dbc"`
 //!
 //! - Version: `Version("")`
 
+use core::ops::BitOr;
+use bitvec::prelude::*;
 #[cfg(feature = "arb")]
 use arbitrary::{Arbitrary, Unstructured};
-use bitvec::prelude::*;
-use core::ops::BitOr;
 
 /// All messages
 #[derive(Clone)]
@@ -40,14 +36,14 @@ impl Messages {
     #[inline(never)]
     pub fn from_can_message(id: u32, payload: &[u8]) -> Result<Self, CanError> {
         use core::convert::TryFrom;
-
+        
         let res = match id {
-            2147489906 => Messages::BmsLimits(BmsLimits::try_from(payload)?),
-            2147489907 => Messages::BmsPackData(BmsPackData::try_from(payload)?),
-            2147489908 => Messages::BmsCellData(BmsCellData::try_from(payload)?),
-            2147489909 => Messages::BmsStatus(BmsStatus::try_from(payload)?),
-            2147489910 => Messages::BmsPackTemps(BmsPackTemps::try_from(payload)?),
-            2147489912 => Messages::BmsPackStats(BmsPackStats::try_from(payload)?),
+            6258 => Messages::BmsLimits(BmsLimits::try_from(payload)?),
+            6259 => Messages::BmsPackData(BmsPackData::try_from(payload)?),
+            6260 => Messages::BmsCellData(BmsCellData::try_from(payload)?),
+            6261 => Messages::BmsStatus(BmsStatus::try_from(payload)?),
+            6262 => Messages::BmsPackTemps(BmsPackTemps::try_from(payload)?),
+            6264 => Messages::BmsPackStats(BmsPackStats::try_from(payload)?),
             n => return Err(CanError::UnknownMessageId(n)),
         };
         Ok(res)
@@ -56,7 +52,7 @@ impl Messages {
 
 /// BMS_Limits
 ///
-/// - ID: 2147489906 (0x80001872)
+/// - ID: 6258 (0x1872)
 /// - Size: 8 bytes
 /// - Transmitter: Solax_inverter
 #[derive(Clone, Copy)]
@@ -65,8 +61,8 @@ pub struct BmsLimits {
 }
 
 impl BmsLimits {
-    pub const MESSAGE_ID: u32 = 2147489906;
-
+    pub const MESSAGE_ID: u32 = 6258;
+    
     pub const SLAVE_VOLTAGE_MAX_MIN: f32 = 380_f32;
     pub const SLAVE_VOLTAGE_MAX_MAX: f32 = 400_f32;
     pub const SLAVE_VOLTAGE_MIN_MIN: f32 = 290_f32;
@@ -75,14 +71,9 @@ impl BmsLimits {
     pub const MAX_CHARGE_RATE_MAX: f32 = 253_f32;
     pub const MAX_DISCHARGE_RATE_MIN: f32 = 0_f32;
     pub const MAX_DISCHARGE_RATE_MAX: f32 = 35_f32;
-
+    
     /// Construct new BMS_Limits from values
-    pub fn new(
-        slave_voltage_max: f32,
-        slave_voltage_min: f32,
-        max_charge_rate: f32,
-        max_discharge_rate: f32,
-    ) -> Result<Self, CanError> {
+    pub fn new(slave_voltage_max: f32, slave_voltage_min: f32, max_charge_rate: f32, max_discharge_rate: f32) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
         res.set_slave_voltage_max(slave_voltage_max)?;
         res.set_slave_voltage_min(slave_voltage_min)?;
@@ -90,12 +81,12 @@ impl BmsLimits {
         res.set_max_discharge_rate(max_discharge_rate)?;
         Ok(res)
     }
-
+    
     /// Access message payload raw value
     pub fn raw(&self) -> &[u8] {
         &self.raw
     }
-
+    
     /// slave_voltage_max
     ///
     /// - Min: 380
@@ -106,7 +97,7 @@ impl BmsLimits {
     pub fn slave_voltage_max(&self) -> f32 {
         self.slave_voltage_max_raw()
     }
-
+    
     /// Get raw value of slave_voltage_max
     ///
     /// - Start bit: 0
@@ -118,29 +109,27 @@ impl BmsLimits {
     #[inline(always)]
     pub fn slave_voltage_max_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
-
+        
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of slave_voltage_max
     #[inline(always)]
     pub fn set_slave_voltage_max(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 380_f32 || 400_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489906,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6258 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
         Ok(())
     }
-
+    
     /// slave_voltage_min
     ///
     /// - Min: 290
@@ -151,7 +140,7 @@ impl BmsLimits {
     pub fn slave_voltage_min(&self) -> f32 {
         self.slave_voltage_min_raw()
     }
-
+    
     /// Get raw value of slave_voltage_min
     ///
     /// - Start bit: 16
@@ -163,29 +152,27 @@ impl BmsLimits {
     #[inline(always)]
     pub fn slave_voltage_min_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
-
+        
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of slave_voltage_min
     #[inline(always)]
     pub fn set_slave_voltage_min(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 290_f32 || 330_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489906,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6258 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
         Ok(())
     }
-
+    
     /// max_charge_rate
     ///
     /// - Min: 0
@@ -196,7 +183,7 @@ impl BmsLimits {
     pub fn max_charge_rate(&self) -> f32 {
         self.max_charge_rate_raw()
     }
-
+    
     /// Get raw value of max_charge_rate
     ///
     /// - Start bit: 32
@@ -208,29 +195,27 @@ impl BmsLimits {
     #[inline(always)]
     pub fn max_charge_rate_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
-
+        
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of max_charge_rate
     #[inline(always)]
     pub fn set_max_charge_rate(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 0_f32 || 253_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489906,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6258 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[32..48].store_le(value);
         Ok(())
     }
-
+    
     /// max_discharge_rate
     ///
     /// - Min: 0
@@ -241,7 +226,7 @@ impl BmsLimits {
     pub fn max_discharge_rate(&self) -> f32 {
         self.max_discharge_rate_raw()
     }
-
+    
     /// Get raw value of max_discharge_rate
     ///
     /// - Start bit: 48
@@ -253,38 +238,35 @@ impl BmsLimits {
     #[inline(always)]
     pub fn max_discharge_rate_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
-
+        
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of max_discharge_rate
     #[inline(always)]
     pub fn set_max_discharge_rate(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 0_f32 || 35_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489906,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6258 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
         Ok(())
     }
+    
 }
 
 impl core::convert::TryFrom<&[u8]> for BmsLimits {
     type Error = CanError;
-
+    
     #[inline(always)]
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        if payload.len() != 8 {
-            return Err(CanError::InvalidPayloadSize);
-        }
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
         let mut raw = [0u8; 8];
         raw.copy_from_slice(&payload[..8]);
         Ok(Self { raw })
@@ -300,7 +282,7 @@ impl core::fmt::Debug for BmsLimits {
                 .field("slave_voltage_min", &self.slave_voltage_min())
                 .field("max_charge_rate", &self.max_charge_rate())
                 .field("max_discharge_rate", &self.max_discharge_rate())
-                .finish()
+            .finish()
         } else {
             f.debug_tuple("BmsLimits").field(&self.raw).finish()
         }
@@ -314,19 +296,13 @@ impl<'a> Arbitrary<'a> for BmsLimits {
         let slave_voltage_min = u.float_in_range(290_f32..=330_f32)?;
         let max_charge_rate = u.float_in_range(0_f32..=253_f32)?;
         let max_discharge_rate = u.float_in_range(0_f32..=35_f32)?;
-        BmsLimits::new(
-            slave_voltage_max,
-            slave_voltage_min,
-            max_charge_rate,
-            max_discharge_rate,
-        )
-        .map_err(|_| arbitrary::Error::IncorrectFormat)
+        BmsLimits::new(slave_voltage_max,slave_voltage_min,max_charge_rate,max_discharge_rate).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
 /// BMS_PackData
 ///
-/// - ID: 2147489907 (0x80001873)
+/// - ID: 6259 (0x1873)
 /// - Size: 8 bytes
 /// - Transmitter: Solax_inverter
 #[derive(Clone, Copy)]
@@ -335,8 +311,8 @@ pub struct BmsPackData {
 }
 
 impl BmsPackData {
-    pub const MESSAGE_ID: u32 = 2147489907;
-
+    pub const MESSAGE_ID: u32 = 6259;
+    
     pub const MASTER_VOLTAGE_MIN: f32 = 290_f32;
     pub const MASTER_VOLTAGE_MAX: f32 = 400_f32;
     pub const CURRENT_SENSOR_MIN: f32 = -40_f32;
@@ -345,14 +321,9 @@ impl BmsPackData {
     pub const SOC_MAX: u16 = 100_u16;
     pub const KWH_REMAINING_MIN: f32 = 0_f32;
     pub const KWH_REMAINING_MAX: f32 = 100_f32;
-
+    
     /// Construct new BMS_PackData from values
-    pub fn new(
-        master_voltage: f32,
-        current_sensor: f32,
-        soc: u16,
-        kwh_remaining: f32,
-    ) -> Result<Self, CanError> {
+    pub fn new(master_voltage: f32, current_sensor: f32, soc: u16, kwh_remaining: f32) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
         res.set_master_voltage(master_voltage)?;
         res.set_current_sensor(current_sensor)?;
@@ -360,12 +331,12 @@ impl BmsPackData {
         res.set_kwh_remaining(kwh_remaining)?;
         Ok(res)
     }
-
+    
     /// Access message payload raw value
     pub fn raw(&self) -> &[u8] {
         &self.raw
     }
-
+    
     /// master_voltage
     ///
     /// - Min: 290
@@ -376,7 +347,7 @@ impl BmsPackData {
     pub fn master_voltage(&self) -> f32 {
         self.master_voltage_raw()
     }
-
+    
     /// Get raw value of master_voltage
     ///
     /// - Start bit: 0
@@ -388,29 +359,27 @@ impl BmsPackData {
     #[inline(always)]
     pub fn master_voltage_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
-
+        
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of master_voltage
     #[inline(always)]
     pub fn set_master_voltage(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 290_f32 || 400_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489907,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6259 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
         Ok(())
     }
-
+    
     /// current_sensor
     ///
     /// - Min: -40
@@ -421,7 +390,7 @@ impl BmsPackData {
     pub fn current_sensor(&self) -> f32 {
         self.current_sensor_raw()
     }
-
+    
     /// Get raw value of current_sensor
     ///
     /// - Start bit: 16
@@ -433,31 +402,29 @@ impl BmsPackData {
     #[inline(always)]
     pub fn current_sensor_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
-
-        let signal = i16::from_ne_bytes(signal.to_ne_bytes());
+        
+        let signal  = i16::from_ne_bytes(signal.to_ne_bytes());
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of current_sensor
     #[inline(always)]
     pub fn set_current_sensor(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < -40_f32 || 40_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489907,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6259 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as i16;
-
+        
         let value = u16::from_ne_bytes(value.to_ne_bytes());
         self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
         Ok(())
     }
-
+    
     /// soc
     ///
     /// - Min: 0
@@ -468,7 +435,7 @@ impl BmsPackData {
     pub fn soc(&self) -> u16 {
         self.soc_raw()
     }
-
+    
     /// Get raw value of soc
     ///
     /// - Start bit: 32
@@ -480,23 +447,21 @@ impl BmsPackData {
     #[inline(always)]
     pub fn soc_raw(&self) -> u16 {
         let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
-
+        
         signal
     }
-
+    
     /// Set value of soc
     #[inline(always)]
     pub fn set_soc(&mut self, value: u16) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 0_u16 || 100_u16 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489907,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6259 });
         }
         self.raw.view_bits_mut::<Lsb0>()[32..48].store_le(value);
         Ok(())
     }
-
+    
     /// kwh_remaining
     ///
     /// - Min: 0
@@ -507,7 +472,7 @@ impl BmsPackData {
     pub fn kwh_remaining(&self) -> f32 {
         self.kwh_remaining_raw()
     }
-
+    
     /// Get raw value of kwh_remaining
     ///
     /// - Start bit: 48
@@ -519,38 +484,35 @@ impl BmsPackData {
     #[inline(always)]
     pub fn kwh_remaining_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
-
+        
         let factor = 0.01_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of kwh_remaining
     #[inline(always)]
     pub fn set_kwh_remaining(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 0_f32 || 100_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489907,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6259 });
         }
         let factor = 0.01_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
         Ok(())
     }
+    
 }
 
 impl core::convert::TryFrom<&[u8]> for BmsPackData {
     type Error = CanError;
-
+    
     #[inline(always)]
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        if payload.len() != 8 {
-            return Err(CanError::InvalidPayloadSize);
-        }
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
         let mut raw = [0u8; 8];
         raw.copy_from_slice(&payload[..8]);
         Ok(Self { raw })
@@ -566,7 +528,7 @@ impl core::fmt::Debug for BmsPackData {
                 .field("current_sensor", &self.current_sensor())
                 .field("soc", &self.soc())
                 .field("kwh_remaining", &self.kwh_remaining())
-                .finish()
+            .finish()
         } else {
             f.debug_tuple("BmsPackData").field(&self.raw).finish()
         }
@@ -580,14 +542,13 @@ impl<'a> Arbitrary<'a> for BmsPackData {
         let current_sensor = u.float_in_range(-40_f32..=40_f32)?;
         let soc = u.int_in_range(0..=100)?;
         let kwh_remaining = u.float_in_range(0_f32..=100_f32)?;
-        BmsPackData::new(master_voltage, current_sensor, soc, kwh_remaining)
-            .map_err(|_| arbitrary::Error::IncorrectFormat)
+        BmsPackData::new(master_voltage,current_sensor,soc,kwh_remaining).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
 /// BMS_CellData
 ///
-/// - ID: 2147489908 (0x80001874)
+/// - ID: 6260 (0x1874)
 /// - Size: 8 bytes
 /// - Transmitter: Solax_inverter
 #[derive(Clone, Copy)]
@@ -596,8 +557,8 @@ pub struct BmsCellData {
 }
 
 impl BmsCellData {
-    pub const MESSAGE_ID: u32 = 2147489908;
-
+    pub const MESSAGE_ID: u32 = 6260;
+    
     pub const CELL_VOLTS_LOW_MIN: f32 = 2900_f32;
     pub const CELL_VOLTS_LOW_MAX: f32 = 4200_f32;
     pub const CELL_VOLTS_HIGH_MIN: f32 = 2900_f32;
@@ -606,14 +567,9 @@ impl BmsCellData {
     pub const CELL_TEMPERATURE_LOW_MAX: f32 = 60_f32;
     pub const CELL_TEMPERATURE_HIGH_MIN: f32 = -40_f32;
     pub const CELL_TEMPERATURE_HIGH_MAX: f32 = 60_f32;
-
+    
     /// Construct new BMS_CellData from values
-    pub fn new(
-        cell_volts_low: f32,
-        cell_volts_high: f32,
-        cell_temperature_low: f32,
-        cell_temperature_high: f32,
-    ) -> Result<Self, CanError> {
+    pub fn new(cell_volts_low: f32, cell_volts_high: f32, cell_temperature_low: f32, cell_temperature_high: f32) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
         res.set_cell_volts_low(cell_volts_low)?;
         res.set_cell_volts_high(cell_volts_high)?;
@@ -621,12 +577,12 @@ impl BmsCellData {
         res.set_cell_temperature_high(cell_temperature_high)?;
         Ok(res)
     }
-
+    
     /// Access message payload raw value
     pub fn raw(&self) -> &[u8] {
         &self.raw
     }
-
+    
     /// cell_volts_low
     ///
     /// - Min: 2900
@@ -637,7 +593,7 @@ impl BmsCellData {
     pub fn cell_volts_low(&self) -> f32 {
         self.cell_volts_low_raw()
     }
-
+    
     /// Get raw value of cell_volts_low
     ///
     /// - Start bit: 48
@@ -649,29 +605,27 @@ impl BmsCellData {
     #[inline(always)]
     pub fn cell_volts_low_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
-
+        
         let factor = 100_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of cell_volts_low
     #[inline(always)]
     pub fn set_cell_volts_low(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 2900_f32 || 4200_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489908,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
         let factor = 100_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
         Ok(())
     }
-
+    
     /// cell_volts_high
     ///
     /// - Min: 2900
@@ -682,7 +636,7 @@ impl BmsCellData {
     pub fn cell_volts_high(&self) -> f32 {
         self.cell_volts_high_raw()
     }
-
+    
     /// Get raw value of cell_volts_high
     ///
     /// - Start bit: 32
@@ -694,29 +648,27 @@ impl BmsCellData {
     #[inline(always)]
     pub fn cell_volts_high_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[32..48].load_le::<u16>();
-
+        
         let factor = 100_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of cell_volts_high
     #[inline(always)]
     pub fn set_cell_volts_high(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 2900_f32 || 4200_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489908,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
         let factor = 100_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[32..48].store_le(value);
         Ok(())
     }
-
+    
     /// cell_temperature_low
     ///
     /// - Min: -40
@@ -727,7 +679,7 @@ impl BmsCellData {
     pub fn cell_temperature_low(&self) -> f32 {
         self.cell_temperature_low_raw()
     }
-
+    
     /// Get raw value of cell_temperature_low
     ///
     /// - Start bit: 16
@@ -739,31 +691,29 @@ impl BmsCellData {
     #[inline(always)]
     pub fn cell_temperature_low_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
-
-        let signal = i16::from_ne_bytes(signal.to_ne_bytes());
+        
+        let signal  = i16::from_ne_bytes(signal.to_ne_bytes());
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of cell_temperature_low
     #[inline(always)]
     pub fn set_cell_temperature_low(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < -40_f32 || 60_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489908,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as i16;
-
+        
         let value = u16::from_ne_bytes(value.to_ne_bytes());
         self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
         Ok(())
     }
-
+    
     /// cell_temperature_high
     ///
     /// - Min: -40
@@ -774,7 +724,7 @@ impl BmsCellData {
     pub fn cell_temperature_high(&self) -> f32 {
         self.cell_temperature_high_raw()
     }
-
+    
     /// Get raw value of cell_temperature_high
     ///
     /// - Start bit: 0
@@ -786,40 +736,37 @@ impl BmsCellData {
     #[inline(always)]
     pub fn cell_temperature_high_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
-
-        let signal = i16::from_ne_bytes(signal.to_ne_bytes());
+        
+        let signal  = i16::from_ne_bytes(signal.to_ne_bytes());
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of cell_temperature_high
     #[inline(always)]
     pub fn set_cell_temperature_high(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < -40_f32 || 60_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489908,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6260 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as i16;
-
+        
         let value = u16::from_ne_bytes(value.to_ne_bytes());
         self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
         Ok(())
     }
+    
 }
 
 impl core::convert::TryFrom<&[u8]> for BmsCellData {
     type Error = CanError;
-
+    
     #[inline(always)]
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        if payload.len() != 8 {
-            return Err(CanError::InvalidPayloadSize);
-        }
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
         let mut raw = [0u8; 8];
         raw.copy_from_slice(&payload[..8]);
         Ok(Self { raw })
@@ -835,7 +782,7 @@ impl core::fmt::Debug for BmsCellData {
                 .field("cell_volts_high", &self.cell_volts_high())
                 .field("cell_temperature_low", &self.cell_temperature_low())
                 .field("cell_temperature_high", &self.cell_temperature_high())
-                .finish()
+            .finish()
         } else {
             f.debug_tuple("BmsCellData").field(&self.raw).finish()
         }
@@ -849,19 +796,13 @@ impl<'a> Arbitrary<'a> for BmsCellData {
         let cell_volts_high = u.float_in_range(2900_f32..=4200_f32)?;
         let cell_temperature_low = u.float_in_range(-40_f32..=60_f32)?;
         let cell_temperature_high = u.float_in_range(-40_f32..=60_f32)?;
-        BmsCellData::new(
-            cell_volts_low,
-            cell_volts_high,
-            cell_temperature_low,
-            cell_temperature_high,
-        )
-        .map_err(|_| arbitrary::Error::IncorrectFormat)
+        BmsCellData::new(cell_volts_low,cell_volts_high,cell_temperature_low,cell_temperature_high).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
 /// BMS_Status
 ///
-/// - ID: 2147489909 (0x80001875)
+/// - ID: 6261 (0x1875)
 /// - Size: 8 bytes
 /// - Transmitter: Solax_inverter
 #[derive(Clone, Copy)]
@@ -870,11 +811,11 @@ pub struct BmsStatus {
 }
 
 impl BmsStatus {
-    pub const MESSAGE_ID: u32 = 2147489909;
-
+    pub const MESSAGE_ID: u32 = 6261;
+    
     pub const PACK_TEMPERATURE_MIN: f32 = -40_f32;
     pub const PACK_TEMPERATURE_MAX: f32 = 60_f32;
-
+    
     /// Construct new BMS_Status from values
     pub fn new(bit: bool, contactor: bool, pack_temperature: f32) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
@@ -883,12 +824,12 @@ impl BmsStatus {
         res.set_pack_temperature(pack_temperature)?;
         Ok(res)
     }
-
+    
     /// Access message payload raw value
     pub fn raw(&self) -> &[u8] {
         &self.raw
     }
-
+    
     /// bit
     ///
     /// - Min: 0
@@ -899,7 +840,7 @@ impl BmsStatus {
     pub fn bit(&self) -> bool {
         self.bit_raw()
     }
-
+    
     /// Get raw value of bit
     ///
     /// - Start bit: 16
@@ -911,10 +852,10 @@ impl BmsStatus {
     #[inline(always)]
     pub fn bit_raw(&self) -> bool {
         let signal = self.raw.view_bits::<Lsb0>()[16..17].load_le::<u8>();
-
+        
         signal == 1
     }
-
+    
     /// Set value of bit
     #[inline(always)]
     pub fn set_bit(&mut self, value: bool) -> Result<(), CanError> {
@@ -922,7 +863,7 @@ impl BmsStatus {
         self.raw.view_bits_mut::<Lsb0>()[16..17].store_le(value);
         Ok(())
     }
-
+    
     /// contactor
     ///
     /// - Min: 0
@@ -933,7 +874,7 @@ impl BmsStatus {
     pub fn contactor(&self) -> bool {
         self.contactor_raw()
     }
-
+    
     /// Get raw value of contactor
     ///
     /// - Start bit: 32
@@ -945,10 +886,10 @@ impl BmsStatus {
     #[inline(always)]
     pub fn contactor_raw(&self) -> bool {
         let signal = self.raw.view_bits::<Lsb0>()[32..33].load_le::<u8>();
-
+        
         signal == 1
     }
-
+    
     /// Set value of contactor
     #[inline(always)]
     pub fn set_contactor(&mut self, value: bool) -> Result<(), CanError> {
@@ -956,7 +897,7 @@ impl BmsStatus {
         self.raw.view_bits_mut::<Lsb0>()[32..33].store_le(value);
         Ok(())
     }
-
+    
     /// pack_temperature
     ///
     /// - Min: -40
@@ -967,7 +908,7 @@ impl BmsStatus {
     pub fn pack_temperature(&self) -> f32 {
         self.pack_temperature_raw()
     }
-
+    
     /// Get raw value of pack_temperature
     ///
     /// - Start bit: 0
@@ -979,40 +920,37 @@ impl BmsStatus {
     #[inline(always)]
     pub fn pack_temperature_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
-
-        let signal = i16::from_ne_bytes(signal.to_ne_bytes());
+        
+        let signal  = i16::from_ne_bytes(signal.to_ne_bytes());
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of pack_temperature
     #[inline(always)]
     pub fn set_pack_temperature(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < -40_f32 || 60_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489909,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6261 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as i16;
-
+        
         let value = u16::from_ne_bytes(value.to_ne_bytes());
         self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
         Ok(())
     }
+    
 }
 
 impl core::convert::TryFrom<&[u8]> for BmsStatus {
     type Error = CanError;
-
+    
     #[inline(always)]
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        if payload.len() != 8 {
-            return Err(CanError::InvalidPayloadSize);
-        }
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
         let mut raw = [0u8; 8];
         raw.copy_from_slice(&payload[..8]);
         Ok(Self { raw })
@@ -1027,7 +965,7 @@ impl core::fmt::Debug for BmsStatus {
                 .field("bit", &self.bit())
                 .field("contactor", &self.contactor())
                 .field("pack_temperature", &self.pack_temperature())
-                .finish()
+            .finish()
         } else {
             f.debug_tuple("BmsStatus").field(&self.raw).finish()
         }
@@ -1040,14 +978,13 @@ impl<'a> Arbitrary<'a> for BmsStatus {
         let bit = u.int_in_range(0..=1)? == 1;
         let contactor = u.int_in_range(0..=1)? == 1;
         let pack_temperature = u.float_in_range(-40_f32..=60_f32)?;
-        BmsStatus::new(bit, contactor, pack_temperature)
-            .map_err(|_| arbitrary::Error::IncorrectFormat)
+        BmsStatus::new(bit,contactor,pack_temperature).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
 /// BMS_PackTemps
 ///
-/// - ID: 2147489910 (0x80001876)
+/// - ID: 6262 (0x1876)
 /// - Size: 8 bytes
 /// - Transmitter: Solax_inverter
 #[derive(Clone, Copy)]
@@ -1056,31 +993,27 @@ pub struct BmsPackTemps {
 }
 
 impl BmsPackTemps {
-    pub const MESSAGE_ID: u32 = 2147489910;
-
+    pub const MESSAGE_ID: u32 = 6262;
+    
     pub const CELL_MILLIVOLTS_HIGH_MIN: u16 = 2900_u16;
     pub const CELL_MILLIVOLTS_HIGH_MAX: u16 = 4200_u16;
     pub const CELL_MILLIVOLTS_LOW_MIN: u16 = 2900_u16;
     pub const CELL_MILLIVOLTS_LOW_MAX: u16 = 4200_u16;
-
+    
     /// Construct new BMS_PackTemps from values
-    pub fn new(
-        bit: bool,
-        cell_millivolts_high: u16,
-        cell_millivolts_low: u16,
-    ) -> Result<Self, CanError> {
+    pub fn new(bit: bool, cell_millivolts_high: u16, cell_millivolts_low: u16) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
         res.set_bit(bit)?;
         res.set_cell_millivolts_high(cell_millivolts_high)?;
         res.set_cell_millivolts_low(cell_millivolts_low)?;
         Ok(res)
     }
-
+    
     /// Access message payload raw value
     pub fn raw(&self) -> &[u8] {
         &self.raw
     }
-
+    
     /// bit
     ///
     /// - Min: 0
@@ -1091,7 +1024,7 @@ impl BmsPackTemps {
     pub fn bit(&self) -> bool {
         self.bit_raw()
     }
-
+    
     /// Get raw value of bit
     ///
     /// - Start bit: 0
@@ -1103,10 +1036,10 @@ impl BmsPackTemps {
     #[inline(always)]
     pub fn bit_raw(&self) -> bool {
         let signal = self.raw.view_bits::<Lsb0>()[0..1].load_le::<u8>();
-
+        
         signal == 1
     }
-
+    
     /// Set value of bit
     #[inline(always)]
     pub fn set_bit(&mut self, value: bool) -> Result<(), CanError> {
@@ -1114,7 +1047,7 @@ impl BmsPackTemps {
         self.raw.view_bits_mut::<Lsb0>()[0..1].store_le(value);
         Ok(())
     }
-
+    
     /// cell_millivolts_high
     ///
     /// - Min: 2900
@@ -1125,7 +1058,7 @@ impl BmsPackTemps {
     pub fn cell_millivolts_high(&self) -> u16 {
         self.cell_millivolts_high_raw()
     }
-
+    
     /// Get raw value of cell_millivolts_high
     ///
     /// - Start bit: 16
@@ -1137,23 +1070,21 @@ impl BmsPackTemps {
     #[inline(always)]
     pub fn cell_millivolts_high_raw(&self) -> u16 {
         let signal = self.raw.view_bits::<Lsb0>()[16..32].load_le::<u16>();
-
+        
         signal
     }
-
+    
     /// Set value of cell_millivolts_high
     #[inline(always)]
     pub fn set_cell_millivolts_high(&mut self, value: u16) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 2900_u16 || 4200_u16 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489910,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6262 });
         }
         self.raw.view_bits_mut::<Lsb0>()[16..32].store_le(value);
         Ok(())
     }
-
+    
     /// cell_millivolts_low
     ///
     /// - Min: 2900
@@ -1164,7 +1095,7 @@ impl BmsPackTemps {
     pub fn cell_millivolts_low(&self) -> u16 {
         self.cell_millivolts_low_raw()
     }
-
+    
     /// Get raw value of cell_millivolts_low
     ///
     /// - Start bit: 48
@@ -1176,32 +1107,29 @@ impl BmsPackTemps {
     #[inline(always)]
     pub fn cell_millivolts_low_raw(&self) -> u16 {
         let signal = self.raw.view_bits::<Lsb0>()[48..64].load_le::<u16>();
-
+        
         signal
     }
-
+    
     /// Set value of cell_millivolts_low
     #[inline(always)]
     pub fn set_cell_millivolts_low(&mut self, value: u16) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 2900_u16 || 4200_u16 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489910,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6262 });
         }
         self.raw.view_bits_mut::<Lsb0>()[48..64].store_le(value);
         Ok(())
     }
+    
 }
 
 impl core::convert::TryFrom<&[u8]> for BmsPackTemps {
     type Error = CanError;
-
+    
     #[inline(always)]
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        if payload.len() != 8 {
-            return Err(CanError::InvalidPayloadSize);
-        }
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
         let mut raw = [0u8; 8];
         raw.copy_from_slice(&payload[..8]);
         Ok(Self { raw })
@@ -1216,7 +1144,7 @@ impl core::fmt::Debug for BmsPackTemps {
                 .field("bit", &self.bit())
                 .field("cell_millivolts_high", &self.cell_millivolts_high())
                 .field("cell_millivolts_low", &self.cell_millivolts_low())
-                .finish()
+            .finish()
         } else {
             f.debug_tuple("BmsPackTemps").field(&self.raw).finish()
         }
@@ -1229,14 +1157,13 @@ impl<'a> Arbitrary<'a> for BmsPackTemps {
         let bit = u.int_in_range(0..=1)? == 1;
         let cell_millivolts_high = u.int_in_range(2900..=4200)?;
         let cell_millivolts_low = u.int_in_range(2900..=4200)?;
-        BmsPackTemps::new(bit, cell_millivolts_high, cell_millivolts_low)
-            .map_err(|_| arbitrary::Error::IncorrectFormat)
+        BmsPackTemps::new(bit,cell_millivolts_high,cell_millivolts_low).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
 
 /// BMS_PackStats
 ///
-/// - ID: 2147489912 (0x80001878)
+/// - ID: 6264 (0x1878)
 /// - Size: 8 bytes
 /// - Transmitter: Solax_inverter
 #[derive(Clone, Copy)]
@@ -1245,13 +1172,13 @@ pub struct BmsPackStats {
 }
 
 impl BmsPackStats {
-    pub const MESSAGE_ID: u32 = 2147489912;
-
+    pub const MESSAGE_ID: u32 = 6264;
+    
     pub const PACK_VOLTAGE_MIN: f32 = 290_f32;
     pub const PACK_VOLTAGE_MAX: f32 = 400_f32;
     pub const TOTAL_WATT_HRS_MIN: u32 = 0_u32;
     pub const TOTAL_WATT_HRS_MAX: u32 = 429497000_u32;
-
+    
     /// Construct new BMS_PackStats from values
     pub fn new(pack_voltage: f32, total_watt_hrs: u32) -> Result<Self, CanError> {
         let mut res = Self { raw: [0u8; 8] };
@@ -1259,12 +1186,12 @@ impl BmsPackStats {
         res.set_total_watt_hrs(total_watt_hrs)?;
         Ok(res)
     }
-
+    
     /// Access message payload raw value
     pub fn raw(&self) -> &[u8] {
         &self.raw
     }
-
+    
     /// pack_voltage
     ///
     /// - Min: 290
@@ -1275,7 +1202,7 @@ impl BmsPackStats {
     pub fn pack_voltage(&self) -> f32 {
         self.pack_voltage_raw()
     }
-
+    
     /// Get raw value of pack_voltage
     ///
     /// - Start bit: 0
@@ -1287,29 +1214,27 @@ impl BmsPackStats {
     #[inline(always)]
     pub fn pack_voltage_raw(&self) -> f32 {
         let signal = self.raw.view_bits::<Lsb0>()[0..16].load_le::<u16>();
-
+        
         let factor = 0.1_f32;
         let offset = 0_f32;
         (signal as f32) * factor + offset
     }
-
+    
     /// Set value of pack_voltage
     #[inline(always)]
     pub fn set_pack_voltage(&mut self, value: f32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 290_f32 || 400_f32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489912,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6264 });
         }
         let factor = 0.1_f32;
         let offset = 0_f32;
         let value = ((value - offset) / factor) as u16;
-
+        
         self.raw.view_bits_mut::<Lsb0>()[0..16].store_le(value);
         Ok(())
     }
-
+    
     /// total_watt_hrs
     ///
     /// - Min: 0
@@ -1320,7 +1245,7 @@ impl BmsPackStats {
     pub fn total_watt_hrs(&self) -> u32 {
         self.total_watt_hrs_raw()
     }
-
+    
     /// Get raw value of total_watt_hrs
     ///
     /// - Start bit: 32
@@ -1332,32 +1257,29 @@ impl BmsPackStats {
     #[inline(always)]
     pub fn total_watt_hrs_raw(&self) -> u32 {
         let signal = self.raw.view_bits::<Lsb0>()[32..64].load_le::<u32>();
-
+        
         signal
     }
-
+    
     /// Set value of total_watt_hrs
     #[inline(always)]
     pub fn set_total_watt_hrs(&mut self, value: u32) -> Result<(), CanError> {
         #[cfg(feature = "range_checked")]
         if value < 0_u32 || 429497000_u32 < value {
-            return Err(CanError::ParameterOutOfRange {
-                message_id: 2147489912,
-            });
+            return Err(CanError::ParameterOutOfRange { message_id: 6264 });
         }
         self.raw.view_bits_mut::<Lsb0>()[32..64].store_le(value);
         Ok(())
     }
+    
 }
 
 impl core::convert::TryFrom<&[u8]> for BmsPackStats {
     type Error = CanError;
-
+    
     #[inline(always)]
     fn try_from(payload: &[u8]) -> Result<Self, Self::Error> {
-        if payload.len() != 8 {
-            return Err(CanError::InvalidPayloadSize);
-        }
+        if payload.len() != 8 { return Err(CanError::InvalidPayloadSize); }
         let mut raw = [0u8; 8];
         raw.copy_from_slice(&payload[..8]);
         Ok(Self { raw })
@@ -1371,7 +1293,7 @@ impl core::fmt::Debug for BmsPackStats {
             f.debug_struct("BmsPackStats")
                 .field("pack_voltage", &self.pack_voltage())
                 .field("total_watt_hrs", &self.total_watt_hrs())
-                .finish()
+            .finish()
         } else {
             f.debug_tuple("BmsPackStats").field(&self.raw).finish()
         }
@@ -1383,10 +1305,10 @@ impl<'a> Arbitrary<'a> for BmsPackStats {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self, arbitrary::Error> {
         let pack_voltage = u.float_in_range(290_f32..=400_f32)?;
         let total_watt_hrs = u.int_in_range(0..=429497000)?;
-        BmsPackStats::new(pack_voltage, total_watt_hrs)
-            .map_err(|_| arbitrary::Error::IncorrectFormat)
+        BmsPackStats::new(pack_voltage,total_watt_hrs).map_err(|_| arbitrary::Error::IncorrectFormat)
     }
 }
+
 
 /// This is just to make testing easier
 #[allow(dead_code)]
@@ -1443,3 +1365,4 @@ impl UnstructuredFloatExt for arbitrary::Unstructured<'_> {
         Ok(random)
     }
 }
+
