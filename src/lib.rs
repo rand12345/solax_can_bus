@@ -2,14 +2,14 @@
 #![allow(clippy::enum_variant_names)]
 #![allow(dead_code)]
 #![allow(clippy::uninlined_format_args)]
-
 use anyhow::{anyhow, Context, Result};
+use core::iter::Iter;
 use embedded_hal::can::{ExtendedId, Id};
-// use heapless::Vec; Need to move to no_std
+//needs alloc
 use crate::messages::*;
+use embassy_time::{Duration, Instant};
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
 mod messages; // to be implemented in later commit
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
@@ -72,6 +72,7 @@ pub struct SolaxBms {
     #[serde(skip)]
     pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
+    #[serde(skip)]
     timeout: Duration,
 }
 
@@ -111,7 +112,7 @@ pub struct SolaxBms {
     timeout: Duration,
 }
 
-#[cfg(feature = "std")]
+// #[cfg(feature = "std")]
 impl SolaxBms {
     // Returns Some(vec of can frames) or Ok(None) for no tx frames needed
 
@@ -140,11 +141,11 @@ impl SolaxBms {
             None => false,
         }
     }
-    pub fn parser<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
+    pub fn parser<T: embedded_hal::can::Frame + core::clone::Clone + core::marker::Copy>(
         &mut self,
         can_frame: T,
         timeout: Duration,
-    ) -> Result<Option<Vec<T>>> {
+    ) -> Result<Iter<T>> {
         self.timeout = timeout;
         if can_frame.id() != Id::Extended(ExtendedId::new(0x1871).unwrap()) {
             return Err(anyhow!(
@@ -174,28 +175,30 @@ impl SolaxBms {
             }
         };
 
-        // if !(1..=100u16).contains(&self.capacity) {
-        //     return Err(anyhow!("Data fault condition - SoC = {}", self.capacity));
-        // }
+        // if we need an init frame
+        core::iter::empty;
 
-        Ok(match can_frame.data() {
-            REG01 | REG02 => Some(self.reg01()?),
-            REG05 => Some(self.reg05()?),
-            [0x3, 0x6, _, _, _, _, _, _] => {
-                self.reg03(can_frame.data());
-                None
+        let frames = {
+            if matches!(can_frame.data(), [0x3, 0x6, _, _, _, _, _, _]) {
+                Iter::empty::<T>()
+            } else if matches!(can_frame.data(), REG01) {
+                if self.announce.is_none() {
+                    Some(Instant::now());
+                    [self.announce::<T>()?].iter()
+                } else {
+                    self.reg01()?.iter()
+                }
+            } else if matches!(can_frame.data(), REG05) {
+                self.reg05()?.iter()
+            } else {
+                Iter::empty::<T>()
             }
-            _ => None,
-        })
+        };
+
+        Ok(frames)
     }
 
     fn reg01<T: embedded_hal::can::Frame>(&mut self) -> Result<Vec<T>> {
-        if self.announce.is_none() {
-            self.announce = Some(Instant::now());
-            warn!("Gateway announce sent");
-            return Ok(vec![self.announce()?]);
-        };
-
         match self.is_valid() {
             true => {
                 if self.counter > 3 {
@@ -218,7 +221,7 @@ impl SolaxBms {
             data[2], data[3], data[4], data[5], data[6], data[7]
         );
     }
-    fn reg05<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
+    fn reg05<T: embedded_hal::can::Frame + core::clone::Clone + core::marker::Copy>(
         &self,
     ) -> Result<Vec<T>> {
         reg05_data()
@@ -460,7 +463,7 @@ impl SolaxBms {
     */
 }
 
-fn reg05_data<T: embedded_hal::can::Frame + std::clone::Clone + std::marker::Copy>(
+fn reg05_data<T: embedded_hal::can::Frame + core::clone::Clone + core::marker::Copy>(
 ) -> Result<Vec<T>> {
     //simplify this
 
