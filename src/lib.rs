@@ -1,6 +1,6 @@
 #![allow(clippy::enum_variant_names)]
 #![allow(clippy::uninlined_format_args)]
-// #![allow(dead_code)]
+#![allow(dead_code)]
 #![allow(unused_imports)]
 #![feature(error_in_core)]
 #![no_std]
