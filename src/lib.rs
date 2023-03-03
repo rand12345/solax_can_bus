@@ -356,99 +356,37 @@ where
         }
     }
     fn reg05(&self) -> Result<[T; 18], SolaxError> {
-        //simplify this
+        // Future v2 protocol goes here.
+        // Cell volts, temps, etc
+        let zero = |id| {
+            T::new(
+                Id::Extended(ExtendedId::new(id).unwrap()),
+                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
+            )
+            .unwrap()
+        };
+
+        let data = |id, bytes| T::new(Id::Extended(ExtendedId::new(id).unwrap()), bytes).unwrap();
 
         Ok([
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x0, 0x54, 0x83, 0x66, 0x77, 0x83, 0x70, 0x65],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x0, 0x50, 0x51, 0x65, 0x66, 0x48, 0x53, 0x50],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1881).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
-            T::new(
-                Id::Extended(ExtendedId::new(0x1882).unwrap()),
-                &[0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0],
-            )
-            .unwrap(),
+            data(0x1881, &[0x0, 0x54, 0x83, 0x66, 0x77, 0x83, 0x70, 0x65]),
+            data(0x1881, &[0x0, 0x50, 0x51, 0x65, 0x66, 0x48, 0x53, 0x50]),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
+            zero(0x1881),
+            zero(0x1882),
         ])
     }
 }
