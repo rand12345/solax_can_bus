@@ -54,7 +54,7 @@ impl core::fmt::Display for SolaxError {
 
 #[cfg(feature = "serde_support")]
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
-pub struct SolaxBms<T> {
+pub struct SolaxBms {
     // no conversions in this struct
     pub status: SolaxStatus,
     pub slave_voltage_max: f32, // 1000 = 100.0v
@@ -91,12 +91,11 @@ pub struct SolaxBms<T> {
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
     #[serde(skip)]
     timeout: Duration,
-    phantomdata: core::marker::PhantomData<T>,
 }
 
 #[cfg(not(feature = "serde_support"))]
 #[derive(Debug, Default, Clone)]
-pub struct SolaxBms<T> {
+pub struct SolaxBms {
     // no conversions out of this struct
     pub status: SolaxStatus,
     pub slave_voltage_max: u16, // 1000 = 100.0v
@@ -128,15 +127,11 @@ pub struct SolaxBms<T> {
     pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
     timeout: Duration,
-    phantomdata: core::marker::PhantomData<T>,
 }
 
 // #[cfg(feature = "std")]
-impl<T> SolaxBms<T>
-where
-    T: embedded_hal::can::Frame + core::clone::Clone,
-{
-    pub fn parser(
+impl SolaxBms {
+    pub fn parser<T: embedded_hal::can::Frame + core::clone::Clone>(
         &mut self,
         can_frame: T,
         timeout: Duration,
@@ -223,7 +218,9 @@ where
         results()
     }
 
-    fn reg01(&mut self) -> Result<[T; 7], SolaxError> {
+    fn reg01<T: embedded_hal::can::Frame + core::clone::Clone>(
+        &mut self,
+    ) -> Result<[T; 7], SolaxError> {
         let canid = |id| {
             if let Some(ext_id) = ExtendedId::new(id) {
                 Ok(Id::Extended(ext_id))
@@ -362,7 +359,9 @@ where
             None => false,
         }
     }
-    fn reg05(&self) -> Result<[T; 18], SolaxError> {
+    fn reg05<T: embedded_hal::can::Frame + core::clone::Clone>(
+        &self,
+    ) -> Result<[T; 18], SolaxError> {
         // Future v2 protocol goes here.
         // Cell volts, temps, etc
 
