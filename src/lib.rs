@@ -224,6 +224,13 @@ where
     }
 
     fn reg01(&mut self) -> Result<[T; 7], SolaxError> {
+        let canid = |id| {
+            if let Some(ext_id) = ExtendedId::new(id) {
+                Ok(Id::Extended(ext_id))
+            } else {
+                Err(SolaxError::InvalidFrameEncode(id))
+            }
+        };
         let output: [T; 7] = [
             // 0x1877 ====================
             T::new(
@@ -233,7 +240,7 @@ where
             .unwrap(),
             // 0x1872 ====================
             T::new(
-                Id::Extended(ExtendedId::new(BmsLimits::MESSAGE_ID).unwrap()),
+                canid(BmsLimits::MESSAGE_ID)?,
                 BmsLimits::new(
                     self.slave_voltage_max,
                     self.slave_voltage_min,
@@ -246,7 +253,7 @@ where
             .unwrap(),
             // 0x1873 ====================
             T::new(
-                Id::Extended(ExtendedId::new(BmsPackData::MESSAGE_ID).unwrap()),
+                canid(BmsPackData::MESSAGE_ID)?,
                 BmsPackData::new(self.voltage, self.current, self.capacity, self.kwh)
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackData::MESSAGE_ID))?
                     .raw(),
@@ -254,7 +261,7 @@ where
             .unwrap(),
             // 0x1874 ====================
             T::new(
-                Id::Extended(ExtendedId::new(BmsCellData::MESSAGE_ID).unwrap()),
+                canid(BmsCellData::MESSAGE_ID)?,
                 BmsCellData::new(
                     self.cell_voltage_min.into(),
                     self.cell_voltage_max.into(),
@@ -267,7 +274,7 @@ where
             .unwrap(),
             // 0x1875 ====================
             T::new(
-                Id::Extended(ExtendedId::new(BmsStatus::MESSAGE_ID).unwrap()),
+                canid(BmsStatus::MESSAGE_ID)?,
                 BmsStatus::new(true, self.contactor, self.int_temp)
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsStatus::MESSAGE_ID))?
                     .raw(),
@@ -275,7 +282,7 @@ where
             .unwrap(),
             // 0x1876 ====================
             T::new(
-                Id::Extended(ExtendedId::new(BmsPackTemps::MESSAGE_ID).unwrap()),
+                canid(BmsPackTemps::MESSAGE_ID)?,
                 BmsPackTemps::new(true, self.cell_voltage_max, self.cell_voltage_min)
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackTemps::MESSAGE_ID))?
                     .raw(),
@@ -283,7 +290,7 @@ where
             .unwrap(),
             // 0x1878 ====================
             T::new(
-                Id::Extended(ExtendedId::new(BmsPackStats::MESSAGE_ID).unwrap()),
+                canid(BmsPackStats::MESSAGE_ID)?,
                 BmsPackStats::new(self.pack_voltage_max, self.wh_total)
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackStats::MESSAGE_ID))?
                     .raw(),
@@ -358,6 +365,7 @@ where
     fn reg05(&self) -> Result<[T; 18], SolaxError> {
         // Future v2 protocol goes here.
         // Cell volts, temps, etc
+
         let zero = |id| {
             T::new(
                 Id::Extended(ExtendedId::new(id).unwrap()),
