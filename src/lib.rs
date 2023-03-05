@@ -6,21 +6,17 @@
 #![no_std]
 
 use crate::messages::*;
+#[cfg(feature = "defmt")]
+use defmt::{error, info, warn};
 use embassy_time::{Duration, Instant};
 use embedded_hal::can::{ExtendedId, Id};
 use heapless::Vec as hVec;
-
 #[cfg(not(feature = "defmt"))]
 use log::{error, info};
-
-#[cfg(feature = "defmt")]
-use defmt::{error, info, warn};
-
 use serde::{Deserialize, Serialize};
-mod messages; // to be implemented in later commit
+mod messages;
 
 const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
-// const REG02: &[u8] = &[0x2, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 const REG05: &[u8] = &[0x5, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 
 #[cfg(feature = "serde_support")]
@@ -38,6 +34,7 @@ pub enum SolaxError {
     InvalidFrameEncode(u32),
     TimeStamp([u8; 6]),
     InvalidTimeData,
+    UnwantedFrame,
 }
 impl core::error::Error for SolaxError {}
 impl core::fmt::Display for SolaxError {
@@ -46,8 +43,9 @@ impl core::fmt::Display for SolaxError {
             SolaxError::InvalidData => write!(f, "Invalid data"),
             SolaxError::BadId(id) => write!(f, "Invalid ID: {id:02x?}"),
             SolaxError::InvalidFrameEncode(id) => write!(f, "Invalid Frame encode ID: {id:02x?}"),
-            SolaxError::TimeStamp(time) => write!(f, "Recieved timestamp: {time:02?}"),
+            SolaxError::TimeStamp(time) => write!(f, "Recieved timestamp: {time:02x?}"),
             SolaxError::InvalidTimeData => write!(f, "Invalid timedata decode"),
+            SolaxError::UnwantedFrame => write!(f, "Unwanted can bus frame"),
         }
     }
 }
@@ -81,7 +79,7 @@ pub struct SolaxBms {
     pub counter: u8,
     pub valid: bool,
     #[serde(skip)]
-    pub announce: Option<Instant>,
+    pub announce: bool,
     #[serde(skip)]
     pub last_success: Option<Instant>,
     #[serde(skip)]
@@ -121,7 +119,7 @@ pub struct SolaxBms {
     pub byte2: u8,
     pub counter: u8,
     pub valid: bool,
-    pub announce: Option<Instant>,
+    pub announce: bool,
     pub last_success: Option<Instant>,
     pub last_rx: Option<Instant>,
     pub timestamp: Option<Instant>,
@@ -156,14 +154,6 @@ impl SolaxBms {
         }
 
         if matches!(can_frame.data(), REG01) {
-            // if let Some(time) = self.last_rx {
-            //     if time.elapsed() >= Duration::from_secs(3) {
-            //         // reset annouce timer and force reannoucement of master
-            //         self.announce = None;
-
-            //     }
-            // };
-
             if !self.is_valid() {
                 return Err(SolaxError::InvalidData);
             }
@@ -180,11 +170,8 @@ impl SolaxBms {
                 if time.checked_sub(Duration::from_secs(3)).is_none() {
                     SolaxStatus::InverterReady
                 } else {
-                    if let Some(time) = self.announce {
-                        // if time.elapsed().as_secs() >= 3 {
-                        self.announce = None
-                        // }
-                    };
+                    self.announce = false;
+
                     SolaxStatus::NoInverter
                 }
             } else {
@@ -195,15 +182,16 @@ impl SolaxBms {
         let mut frames: hVec<T, 20> = hVec::new();
         let results = || -> Result<hVec<T, 20>, SolaxError> {
             if matches!(can_frame.data(), REG01) {
-                if self.announce.is_none() {
-                    warn!("Unannounced");
-                    self.announce = Some(Instant::now());
+                if !self.announce {
+                    warn!("Unannounced, sending announcement");
+
                     frames
                         .push(
                             T::new(Id::Extended(ExtendedId::new(0x100A001).unwrap()), &[0u8; 0])
                                 .unwrap(),
                         )
                         .map_err(|_| SolaxError::InvalidData)?;
+                    self.announce = true;
                     Ok(frames)
                     // ))
                 } else {
@@ -214,7 +202,7 @@ impl SolaxBms {
                 frames.extend(self.reg05()?);
                 Ok(frames)
             } else {
-                Err(SolaxError::InvalidData)
+                Err(SolaxError::UnwantedFrame)
             }
         };
         results()
@@ -230,6 +218,7 @@ impl SolaxBms {
                 Err(SolaxError::InvalidFrameEncode(id))
             }
         };
+
         let output: [T; 7] = [
             // 0x1877 ====================
             T::new(
