@@ -157,7 +157,7 @@ impl SolaxBms {
 
         if matches!(can_frame.data(), REG01) {
             if let Some(time) = self.last_rx {
-                if time.elapsed().as_secs() >= 3 {
+                if time.elapsed() >= Duration::from_secs(3) {
                     // reset annouce timer and force reannoucement of master
                     self.announce = None;
                 }
