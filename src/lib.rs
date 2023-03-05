@@ -343,6 +343,7 @@ impl SolaxBms {
     }
 
     pub fn is_fresh(&self) -> bool {
+        return true;
         match self.timestamp {
             Some(time) => {
                 // if time.elapsed() <= self.timeout {
