@@ -6,7 +6,8 @@
 #![no_std]
 
 use crate::messages::*;
-use embassy_time::{Duration, Instant};
+use core::time::{Duration, Instant};
+// use embassy_time::{Duration, Instant};
 use embedded_hal::can::{ExtendedId, Id};
 use heapless::Vec as hVec;
 
