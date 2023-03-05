@@ -177,13 +177,13 @@ impl SolaxBms {
                 self.handshake()?;
             }
             self.status = if let Some(time) = self.last_success {
-                if time.elapsed().as_secs() < 3 {
+                if time.checked_sub(Duration::from_secs(3)).is_none() {
                     SolaxStatus::InverterReady
                 } else {
                     if let Some(time) = self.announce {
-                        if time.elapsed().as_secs() >= 3 {
-                            self.announce = None
-                        }
+                        // if time.elapsed().as_secs() >= 3 {
+                        self.announce = None
+                        // }
                     };
                     SolaxStatus::NoInverter
                 }
@@ -351,11 +351,7 @@ impl SolaxBms {
                     info!("Data is {:?} old", time);
                     true
                 } else {
-                    error!(
-                        "Data is too old {:?}, timeout is {:?}",
-                        time.elapsed(),
-                        self.timeout
-                    );
+                    error!("Data is too old {:?}, timeout is {:?}", time, self.timeout);
                     false
                 }
             }
