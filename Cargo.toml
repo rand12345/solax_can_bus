@@ -23,7 +23,7 @@ heapless = {version = "0.7.16", optional = true}
 serde = { version = "1.0.152", features=["derive"], default-features = false, optional = true }
 bitvec = { version = "1.0", default-features = false }
 arbitrary = { version = "1.0", optional = true } # Enable with `arb` feature
-embassy-time = { git = "https://github.com/embassy-rs/embassy.git", features = ["defmt","defmt-timestamp-uptime","tick-hz-1_000_000"]}
+embassy-time = { git = "https://github.com/embassy-rs/embassy.git", features = ["defmt","defmt-timestamp-uptime","tick-hz-32_768"]}
 defmt = {version ="0.3.2", optional = true} 
 [build-dependencies]
 dbc-codegen = "0.2.0"
