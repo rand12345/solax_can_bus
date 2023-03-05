@@ -345,7 +345,8 @@ impl SolaxBms {
     pub fn is_fresh(&self) -> bool {
         match self.timestamp {
             Some(time) => {
-                if time.elapsed() < self.timeout {
+                // if time.elapsed() <= self.timeout {
+                if time.elapsed().as_ticks() < 100000 {
                     info!("Data is {:?} old", time.elapsed());
                     true
                 } else {
