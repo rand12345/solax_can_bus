@@ -14,7 +14,7 @@ use heapless::Vec as hVec;
 use log::{error, info};
 
 #[cfg(feature = "defmt")]
-use defmt::{error, info};
+use defmt::{error, info, warn};
 
 use serde::{Deserialize, Serialize};
 mod messages; // to be implemented in later commit
@@ -344,12 +344,11 @@ impl SolaxBms {
     }
 
     pub fn is_fresh(&self) -> bool {
-        return true;
         match self.timestamp {
             Some(time) => {
                 // if time.elapsed() <= self.timeout {
-                if time.elapsed().as_secs() < self.timeout {
-                    info!("Data is {:?} old", time.elapsed());
+                if time.elapsed().as_secs() < self.timeout.as_secs() {
+                    info!("Data is {:?} old", time.elapsed().as_secs());
                     true
                 } else {
                     error!(
