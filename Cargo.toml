@@ -15,7 +15,7 @@ no_std = ["dep:heapless"]
 
 
 [dependencies]
-lazy_static = { version = "1.4.0" }
+# lazy_static = { version = "1.4.0" }
 embedded-hal = "0.2.7"
 anyhow = {version = "1.0.68", default-features = false}
 log = {version = "0.4.17", default-features = false}
