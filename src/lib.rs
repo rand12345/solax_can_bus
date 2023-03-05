@@ -6,8 +6,7 @@
 #![no_std]
 
 use crate::messages::*;
-use core::time::{Duration, Instant};
-// use embassy_time::{Duration, Instant};
+use embassy_time::{Duration, Instant};
 use embedded_hal::can::{ExtendedId, Id};
 use heapless::Vec as hVec;
 
@@ -178,11 +177,11 @@ impl SolaxBms {
                 self.handshake()?;
             }
             self.status = if let Some(time) = self.last_success {
-                if time.elapsed() < Duration::from_secs(3) {
+                if time.elapsed().as_secs() < 3 {
                     SolaxStatus::InverterReady
                 } else {
                     if let Some(time) = self.announce {
-                        if time.elapsed() >= Duration::from_secs(3) {
+                        if time.elapsed().as_secs() >= 3 {
                             self.announce = None
                         }
                     };
@@ -197,6 +196,7 @@ impl SolaxBms {
         let results = || -> Result<hVec<T, 20>, SolaxError> {
             if matches!(can_frame.data(), REG01) {
                 if self.announce.is_none() {
+                    warn!("Unannounced");
                     self.announce = Some(Instant::now());
                     frames
                         .push(
@@ -348,7 +348,7 @@ impl SolaxBms {
         match self.timestamp {
             Some(time) => {
                 // if time.elapsed() <= self.timeout {
-                if time.elapsed().as_ticks() < 100000 {
+                if time.elapsed().as_secs() < self.timeout {
                     info!("Data is {:?} old", time.elapsed());
                     true
                 } else {
