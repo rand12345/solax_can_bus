@@ -156,12 +156,14 @@ impl SolaxBms {
         }
 
         if matches!(can_frame.data(), REG01) {
-            if let Some(time) = self.last_rx {
-                if time.elapsed() >= Duration::from_secs(3) {
-                    // reset annouce timer and force reannoucement of master
-                    self.announce = None;
-                }
-            };
+            if self.last_rx.is_some() {
+                if let Some(time) = self.last_rx {
+                    if time.elapsed() >= Duration::from_secs(3) {
+                        // reset annouce timer and force reannoucement of master
+                        self.announce = None;
+                    }
+                };
+            }
             if !self.is_valid() {
                 return Err(SolaxError::InvalidData);
             }
@@ -214,7 +216,7 @@ impl SolaxBms {
                 Err(SolaxError::InvalidData)
             }
         };
-
+        self.last_rx = Some(Instant::now());
         results()
     }
 
