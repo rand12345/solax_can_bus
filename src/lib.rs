@@ -347,7 +347,7 @@ impl SolaxBms {
         match self.timestamp {
             Some(time) => {
                 // if time.elapsed() <= self.timeout {
-                if self.timeout < time.elapsed() {
+                if time.elapsed().checked_sub(self.timeout).is_some() {
                     info!("Data is {:?} old", time.elapsed().as_secs());
                     true
                 } else {
