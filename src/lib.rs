@@ -175,7 +175,7 @@ impl SolaxBms {
                 self.handshake()?;
             }
             self.status = if let Some(time) = self.last_success {
-                if let 0..=2 = time.elapsed().as_secs() {
+                if time.elapsed() < Duration::from_secs(3) {
                     SolaxStatus::InverterReady
                 } else {
                     if let Some(time) = self.announce {
@@ -345,7 +345,7 @@ impl SolaxBms {
         match self.timestamp {
             Some(time) => {
                 if time.elapsed() < self.timeout {
-                    info!("Data is {:?} old", time.elapsed(),);
+                    info!("Data is {:?} old", time.elapsed());
                     true
                 } else {
                     error!(
