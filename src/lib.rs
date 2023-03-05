@@ -348,7 +348,7 @@ impl SolaxBms {
             Some(time) => {
                 // if time.elapsed() <= self.timeout {
                 if time.checked_sub(self.timeout).is_none() {
-                    info!("Data is {:?} old", time.elapsed().as_secs());
+                    info!("Data is {:?} old", time.elapsed());
                     true
                 } else {
                     error!(
