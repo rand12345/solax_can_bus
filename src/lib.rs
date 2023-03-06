@@ -8,7 +8,7 @@
 use crate::messages::*;
 #[cfg(feature = "defmt")]
 use defmt::{error, info, warn};
-use embassy_time::{Duration, Instant};
+// use embassy_time::{Duration, Instant};
 use embedded_hal::can::{ExtendedId, Id};
 use heapless::Vec as hVec;
 #[cfg(not(feature = "defmt"))]
@@ -78,17 +78,17 @@ pub struct SolaxBms {
     pub byte2: u8,
     pub counter: u8,
     pub valid: bool,
-    #[serde(skip)]
+    // #[serde(skip)]
     pub announce: bool,
-    #[serde(skip)]
-    pub last_success: Option<Instant>,
-    #[serde(skip)]
-    pub last_rx: Option<Instant>,
-    #[serde(skip)]
-    pub timestamp: Option<Instant>,
+    // #[serde(skip)]
+    // pub last_success: Option<Instant>,
+    // #[serde(skip)]
+    // pub last_rx: Option<Instant>,
+    // #[serde(skip)]
+    // pub timestamp: Option<Instant>,
     pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
-    #[serde(skip)]
-    timeout: Duration,
+                       // #[serde(skip)]
+                       // timeout: Duration,
 }
 
 #[cfg(not(feature = "serde_support"))]
@@ -132,9 +132,7 @@ impl SolaxBms {
     pub fn parser<T: embedded_hal::can::Frame + core::clone::Clone>(
         &mut self,
         can_frame: T,
-        timeout: Duration,
     ) -> Result<heapless::Vec<T, 20>, SolaxError> {
-        self.timeout = timeout;
         if can_frame.id() != Id::Extended(ExtendedId::new(0x1871).unwrap()) {
             let id_decode = |id| -> Option<u32> {
                 if let Id::Extended(id_enum) = id {
@@ -166,17 +164,6 @@ impl SolaxBms {
                 self.status = SolaxStatus::Handshake;
                 self.handshake()?;
             }
-            self.status = if let Some(time) = self.last_success {
-                if time.checked_sub(Duration::from_secs(3)).is_none() {
-                    SolaxStatus::InverterReady
-                } else {
-                    self.announce = false;
-
-                    SolaxStatus::NoInverter
-                }
-            } else {
-                SolaxStatus::NoInverter
-            };
         }
 
         let mut frames: hVec<T, 20> = hVec::new();
@@ -285,7 +272,7 @@ impl SolaxBms {
             )
             .unwrap(),
         ];
-        self.last_success = Some(Instant::now());
+        // self.last_success = Some(Instant::now());
         Ok(output)
     }
 
@@ -329,24 +316,9 @@ impl SolaxBms {
         self.valid = true
     }
     pub fn is_valid(&self) -> bool {
-        self.valid && self.is_fresh()
+        self.valid
     }
 
-    pub fn is_fresh(&self) -> bool {
-        match self.timestamp {
-            Some(time) => {
-                // if time.elapsed() <= self.timeout {
-                if time.checked_sub(self.timeout).is_none() {
-                    info!("Data is {:?} old", time);
-                    true
-                } else {
-                    error!("Data is too old {:?}, timeout is {:?}", time, self.timeout);
-                    false
-                }
-            }
-            None => false,
-        }
-    }
     fn reg05<T: embedded_hal::can::Frame + core::clone::Clone>(
         &self,
     ) -> Result<[T; 18], SolaxError> {
