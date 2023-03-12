@@ -8,11 +8,12 @@
 use crate::messages::*;
 #[cfg(feature = "defmt")]
 use defmt::{error, info, warn};
-// use embassy_time::{Duration, Instant};
 use embedded_hal::can::{ExtendedId, Id};
 use heapless::Vec as hVec;
 #[cfg(not(feature = "defmt"))]
-use log::{error, info};
+use log::{error, info, warn};
+
+#[cfg(feature = "serde_support")]
 use serde::{Deserialize, Serialize};
 mod messages;
 
@@ -20,13 +21,22 @@ const REG01: &[u8] = &[0x1, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 const REG05: &[u8] = &[0x5, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0];
 
 #[cfg(feature = "serde_support")]
-#[derive(Deserialize, Serialize, Debug, Default, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum SolaxStatus {
     #[default]
     NoInverter,
     Handshake,
     InverterReady,
 }
+#[cfg(not(feature = "serde_support"))]
+#[derive(Debug, Default)]
+pub enum SolaxStatus {
+    #[default]
+    NoInverter,
+    Handshake,
+    InverterReady,
+}
+
 #[derive(Debug)]
 pub enum SolaxError {
     InvalidData,
@@ -51,7 +61,7 @@ impl core::fmt::Display for SolaxError {
 }
 
 #[cfg(feature = "serde_support")]
-#[derive(Deserialize, Serialize, Debug, Default, Clone)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub struct SolaxBms {
     // no conversions in this struct
     pub status: SolaxStatus,
@@ -78,56 +88,42 @@ pub struct SolaxBms {
     pub byte2: u8,
     pub counter: u8,
     pub valid: bool,
-    // #[serde(skip)]
     pub announce: bool,
-    // #[serde(skip)]
-    // pub last_success: Option<Instant>,
-    // #[serde(skip)]
-    // pub last_rx: Option<Instant>,
-    // #[serde(skip)]
-    // pub timestamp: Option<Instant>,
-    pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
-                       // #[serde(skip)]
-                       // timeout: Duration,
+    pub time: [u8; 6],
 }
 
 #[cfg(not(feature = "serde_support"))]
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub struct SolaxBms {
-    // no conversions out of this struct
+    // no conversions in this struct
     pub status: SolaxStatus,
-    pub slave_voltage_max: u16, // 1000 = 100.0v
-    pub slave_voltage_min: u16, // 800 = 80.0v
-    pub charge_max: u16,        // 201 = 20A
-    pub discharge_max: u16,     // 350 = 35A
-    pub voltage: u16,           // 1130 = 113.0V
-    pub current: i16,           // -2 = -0.2A
+    pub slave_voltage_max: f32, // 1000 = 100.0v
+    pub slave_voltage_min: f32, // 800 = 80.0v
+    pub charge_max: f32,        // 201 = 20A
+    pub discharge_max: f32,     // 350 = 35A
+    pub voltage: f32,           // 1130 = 113.0V
+    pub current: f32,           // -2 = -0.2A
     pub capacity: u16,          // %
-    pub kwh: u16,               // 419 = 41.9 Kwh (* 0.1)
-    pub cell_temp_min: i16,     // 18 = 1.8ºC signed
-    pub cell_temp_max: i16,     // 21 = 2.1ºC
+    pub kwh: f32,               // 419 = 41.9 Kwh (* 0.1)
+    pub cell_temp_min: f32,     // 18 = 1.8ºC signed
+    pub cell_temp_max: f32,     // 21 = 2.1ºC
     pub cell_voltage_min: u16,  // 40 = 4.0V
     pub cell_voltage_max: u16,  // 41 = 4.1V
-    pub pack_voltage_max: u16,  // 4100 = 410.0V
+    pub pack_voltage_max: f32,  // 4100 = 410.0V
     pub wh_total: u32,          // watt hours total in wh
     pub contactor: bool,
-    pub int_temp: i16, // 20 = 20ºC
-    pub v_max: u16,    // 4501 = 45.01º
-    pub v_min: u16,    // 1501 = 15.01º
+    pub int_temp: f32, // 20 = 20ºC
+    pub v_max: f32,    // 4501 = 45.01º
+    pub v_min: f32,    // 1501 = 15.01º
     pub id: u8,
     pub byte1: u8,
     pub byte2: u8,
     pub counter: u8,
     pub valid: bool,
     pub announce: bool,
-    pub last_success: Option<Instant>,
-    pub last_rx: Option<Instant>,
-    pub timestamp: Option<Instant>,
-    pub time: [u8; 6], // Broadcast date: 20{}/{}/{} {:02}:{:02}:{:02} or [YY,MM,DD,hh,mm,ss]
-    timeout: Duration,
+    pub time: [u8; 6],
 }
 
-// #[cfg(feature = "std")]
 impl SolaxBms {
     pub fn parser<T: embedded_hal::can::Frame + core::clone::Clone>(
         &mut self,
