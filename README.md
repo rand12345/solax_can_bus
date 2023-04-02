@@ -4,7 +4,7 @@ Can bus @ 500k - all Extended ID, little endian
 
 ## Frames
 
-### Received frame
+### Received frame 
 
 > 0x1871 [0x01,  0x00,  0x01,  0x00,  0x00,  0x00,  0x00,  0x00]
 
