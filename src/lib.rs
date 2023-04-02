@@ -4,8 +4,8 @@
 #![allow(unused_imports)]
 #![feature(error_in_core)]
 #![no_std]
-
 use crate::messages::*;
+use bms_standard::Bms;
 #[cfg(feature = "defmt")]
 use defmt::{error, info, warn};
 use embedded_hal::can::{ExtendedId, Id};
@@ -63,64 +63,28 @@ impl core::fmt::Display for SolaxError {
 #[cfg(feature = "serde_support")]
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct SolaxBms {
-    // no conversions in this struct
     pub status: SolaxStatus,
-    pub slave_voltage_max: f32, // 1000 = 100.0v
-    pub slave_voltage_min: f32, // 800 = 80.0v
-    pub charge_max: f32,        // 201 = 20A
-    pub discharge_max: f32,     // 350 = 35A
-    pub voltage: f32,           // 1130 = 113.0V
-    pub current: f32,           // -2 = -0.2A
-    pub capacity: u16,          // %
-    pub kwh: f32,               // 419 = 41.9 Kwh (* 0.1)
-    pub cell_temp_min: f32,     // 18 = 1.8ºC signed
-    pub cell_temp_max: f32,     // 21 = 2.1ºC
-    pub cell_voltage_min: u16,  // 40 = 4.0V
-    pub cell_voltage_max: u16,  // 41 = 4.1V
-    pub pack_voltage_max: f32,  // 4100 = 410.0V
-    pub wh_total: u32,          // watt hours total in wh
-    pub contactor: bool,
-    pub int_temp: f32, // 20 = 20ºC
-    pub v_max: f32,    // 4501 = 45.01º
-    pub v_min: f32,    // 1501 = 15.01º
-    pub id: u8,
-    pub byte1: u8,
-    pub byte2: u8,
-    pub counter: u8,
-    pub valid: bool,
-    pub announce: bool,
+    contactor: bool,
+    id: u8,
+    byte1: u8,
+    byte2: u8,
+    counter: u8,
+    valid: bool,
+    announce: bool,
     pub time: [u8; 6],
 }
 
 #[cfg(not(feature = "serde_support"))]
 #[derive(Debug, Default)]
 pub struct SolaxBms {
-    // no conversions in this struct
     pub status: SolaxStatus,
-    pub slave_voltage_max: f32, // 1000 = 100.0v
-    pub slave_voltage_min: f32, // 800 = 80.0v
-    pub charge_max: f32,        // 201 = 20A
-    pub discharge_max: f32,     // 350 = 35A
-    pub voltage: f32,           // 1130 = 113.0V
-    pub current: f32,           // -2 = -0.2A
-    pub capacity: u16,          // %
-    pub kwh: f32,               // 419 = 41.9 Kwh (* 0.1)
-    pub cell_temp_min: f32,     // 18 = 1.8ºC signed
-    pub cell_temp_max: f32,     // 21 = 2.1ºC
-    pub cell_voltage_min: u16,  // 40 = 4.0V
-    pub cell_voltage_max: u16,  // 41 = 4.1V
-    pub pack_voltage_max: f32,  // 4100 = 410.0V
-    pub wh_total: u32,          // watt hours total in wh
-    pub contactor: bool,
-    pub int_temp: f32, // 20 = 20ºC
-    pub v_max: f32,    // 4501 = 45.01º
-    pub v_min: f32,    // 1501 = 15.01º
-    pub id: u8,
-    pub byte1: u8,
-    pub byte2: u8,
-    pub counter: u8,
-    pub valid: bool,
-    pub announce: bool,
+    contactor: bool,
+    id: u8,
+    byte1: u8,
+    byte2: u8,
+    counter: u8,
+    valid: bool,
+    announce: bool,
     pub time: [u8; 6],
 }
 
@@ -128,6 +92,8 @@ impl SolaxBms {
     pub fn parser<T: embedded_hal::can::Frame + core::clone::Clone>(
         &mut self,
         can_frame: T,
+        bms: &Bms,
+        contactor: bool,
     ) -> Result<heapless::Vec<T, 20>, SolaxError> {
         if can_frame.id() != Id::Extended(ExtendedId::new(0x1871).unwrap()) {
             let id_decode = |id| -> Option<u32> {
@@ -139,14 +105,13 @@ impl SolaxBms {
             };
             return Err(SolaxError::BadId(id_decode(can_frame.id())));
         };
-
         if matches!(can_frame.data(), [0x3, 0x6, _, _, _, _, _, _]) {
             self.time = can_frame.data()[2..8]
                 .try_into()
                 .map_err(|_e| SolaxError::InvalidTimeData)?;
             return Err(SolaxError::TimeStamp(self.time));
         }
-
+        self.contactor = contactor;
         if matches!(can_frame.data(), REG01) {
             if !self.is_valid() {
                 return Err(SolaxError::InvalidData);
@@ -178,7 +143,7 @@ impl SolaxBms {
                     Ok(frames)
                     // ))
                 } else {
-                    frames.extend(self.reg01()?);
+                    frames.extend(self.reg01(bms)?);
                     Ok(frames)
                 }
             } else if matches!(can_frame.data(), REG05) {
@@ -193,6 +158,7 @@ impl SolaxBms {
 
     fn reg01<T: embedded_hal::can::Frame + core::clone::Clone>(
         &mut self,
+        bms: &Bms,
     ) -> Result<[T; 7], SolaxError> {
         let canid = |id| {
             if let Some(ext_id) = ExtendedId::new(id) {
@@ -213,10 +179,11 @@ impl SolaxBms {
             T::new(
                 canid(BmsLimits::MESSAGE_ID)?,
                 BmsLimits::new(
-                    self.slave_voltage_max,
-                    self.slave_voltage_min,
-                    self.charge_max,
-                    self.discharge_max,
+                    // self.slave_voltage_max,
+                    *bms.get_pack_voltage_limits().max(),
+                    *bms.get_pack_voltage_limits().min(),
+                    bms.charge_max,
+                    bms.discharge_max,
                 )
                 .map_err(|_e| SolaxError::InvalidFrameEncode(BmsLimits::MESSAGE_ID))?
                 .raw(),
@@ -225,19 +192,24 @@ impl SolaxBms {
             // 0x1873 ====================
             T::new(
                 canid(BmsPackData::MESSAGE_ID)?,
-                BmsPackData::new(self.voltage, self.current, self.capacity, self.kwh)
-                    .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackData::MESSAGE_ID))?
-                    .raw(),
+                BmsPackData::new(
+                    bms.pack_volts,
+                    bms.current,
+                    bms.soc as u16,
+                    bms.kwh_remaining,
+                )
+                .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackData::MESSAGE_ID))?
+                .raw(),
             )
             .unwrap(),
             // 0x1874 ====================
             T::new(
                 canid(BmsCellData::MESSAGE_ID)?,
                 BmsCellData::new(
-                    self.cell_voltage_min.into(),
-                    self.cell_voltage_max.into(),
-                    self.cell_temp_min,
-                    self.cell_temp_max,
+                    *bms.cell_range_mv.min() as f32 / 1000.0,
+                    *bms.cell_range_mv.max() as f32 / 1000.0,
+                    *bms.temps.min(),
+                    *bms.temps.max(),
                 )
                 .map_err(|_e| SolaxError::InvalidFrameEncode(BmsCellData::MESSAGE_ID))?
                 .raw(),
@@ -246,7 +218,7 @@ impl SolaxBms {
             // 0x1875 ====================
             T::new(
                 canid(BmsStatus::MESSAGE_ID)?,
-                BmsStatus::new(true, self.contactor, self.int_temp)
+                BmsStatus::new(true, self.contactor, bms.temp)
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsStatus::MESSAGE_ID))?
                     .raw(),
             )
@@ -254,7 +226,7 @@ impl SolaxBms {
             // 0x1876 ====================
             T::new(
                 canid(BmsPackTemps::MESSAGE_ID)?,
-                BmsPackTemps::new(true, self.cell_voltage_max, self.cell_voltage_min)
+                BmsPackTemps::new(true, *bms.cell_range_mv.max(), *bms.cell_range_mv.min())
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackTemps::MESSAGE_ID))?
                     .raw(),
             )
@@ -262,7 +234,7 @@ impl SolaxBms {
             // 0x1878 ====================
             T::new(
                 canid(BmsPackStats::MESSAGE_ID)?,
-                BmsPackStats::new(self.pack_voltage_max, self.wh_total)
+                BmsPackStats::new(bms.pack_volts, 10000)
                     .map_err(|_e| SolaxError::InvalidFrameEncode(BmsPackStats::MESSAGE_ID))?
                     .raw(),
             )
