@@ -20,13 +20,6 @@ Can bus @ 500k - all Extended ID, little endian
 | 0x1877 | 0x00              | 0x00              | 0x00              | 0x00              | id           | 0x00         | byte1            | byte2           |
 | 0x1878 | pack_voltage_max  | pack_voltage_max  | 0x00              | 0x00              | wh_total     | wh_total     | wh_total         | wh_total        |
 
-## Scaling
-
-See dbc/solax.dbc and codegen src/messages.rs (confirmed 21/2/2023)
-
-## Handshake
-
-TBA - see self.id, byte1, byte2 & reg05 frames
 
 ## Screenshot
 
